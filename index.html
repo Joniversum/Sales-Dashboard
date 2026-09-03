@@ -1,0 +1,1256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sales Performance Tracker</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        :root {
+            --slate-900: #0f172a;
+            --slate-800: #1e293b;
+            --slate-700: #334155;
+            --slate-600: #475569;
+            --slate-400: #94a3b8;
+            --slate-200: #e2e8f0;
+            --slate-100: #f1f5f9;
+            --slate-50: #f8fafc;
+            --emerald-600: #10b981;
+            --emerald-100: #d1fae5;
+            --rose-600: #ef4444;
+            --rose-100: #fee2e2;
+            --blue-600: #2563eb;
+            --blue-100: #dbeafe;
+            --amber-600: #d97706;
+            --amber-100: #fef3c7;
+            --text-primary: var(--slate-900);
+            --text-secondary: var(--slate-600);
+            --bg-primary: #ffffff;
+            --bg-secondary: var(--slate-50);
+            --bg-tertiary: var(--slate-100);
+            --border-color: var(--slate-200);
+            --accent-color: var(--emerald-600);
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root:not([data-theme="light"]) {
+                --slate-900: #f8fafc;
+                --slate-800: #e2e8f0;
+                --slate-700: #cbd5e1;
+                --slate-600: #94a3b8;
+                --slate-400: #64748b;
+                --slate-200: #334155;
+                --slate-100: #1e293b;
+                --slate-50: #0f172a;
+                --text-primary: var(--slate-900);
+                --text-secondary: var(--slate-600);
+                --bg-primary: #0f172a;
+                --bg-secondary: #1e293b;
+                --bg-tertiary: #334155;
+                --border-color: var(--slate-200);
+            }
+        }
+
+        :root[data-theme="dark"] {
+            --slate-900: #f8fafc;
+            --slate-800: #e2e8f0;
+            --slate-700: #cbd5e1;
+            --slate-600: #94a3b8;
+            --slate-400: #64748b;
+            --slate-200: #334155;
+            --slate-100: #1e293b;
+            --slate-50: #0f172a;
+            --text-primary: var(--slate-900);
+            --text-secondary: var(--slate-600);
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-tertiary: #334155;
+            --border-color: var(--slate-200);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        header {
+            margin-bottom: 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .sync-status {
+            font-size: 11px;
+            color: var(--text-secondary);
+            padding: 2px 8px;
+            border-radius: 4px;
+            background: transparent;
+            position: absolute;
+            bottom: 4px;
+            right: 4px;
+        }
+
+        .sync-status.synced {
+            color: var(--emerald-600);
+        }
+
+        .sync-status.syncing {
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .dropdown-menu {
+            position: relative;
+            display: inline-block;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            right: 0;
+            background: var(--bg-secondary);
+            min-width: 200px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+            z-index: 1;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .dropdown-content.active {
+            display: block;
+        }
+
+        .dropdown-content button {
+            width: 100%;
+            padding: 12px 16px;
+            border: none;
+            background: transparent;
+            text-align: left;
+            cursor: pointer;
+            font-size: 14px;
+            color: var(--text-primary);
+            border-bottom: 1px solid var(--border-color);
+            transition: background 0.2s;
+        }
+
+        .dropdown-content button:last-child {
+            border-bottom: none;
+        }
+
+        .dropdown-content button:hover {
+            background: var(--bg-tertiary);
+        }
+
+        .dropdown-btn {
+            padding: 10px 14px;
+        }
+
+        h1 {
+            font-size: 28px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        button {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 500;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .btn-primary {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background: var(--border-color);
+        }
+
+        .filters {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+
+        input, select {
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 14px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            transition: border-color 0.2s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .metric-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
+            text-wrap: balance;
+        }
+
+        .metric-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .metric-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+
+        .metric-subtext {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        @media (max-width: 1200px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: var(--text-primary);
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-bottom: 24px;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .data-table th {
+            background: var(--bg-tertiary);
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            color: var(--text-secondary);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .data-table td {
+            padding: 12px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .data-table tbody tr:hover {
+            background: var(--bg-tertiary);
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-won {
+            background: var(--emerald-100);
+            color: var(--emerald-600);
+        }
+
+        .status-pipeline {
+            background: var(--blue-100);
+            color: var(--blue-600);
+        }
+
+        .status-lost {
+            background: var(--rose-100);
+            color: var(--rose-600);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--bg-primary);
+            border-radius: 8px;
+            padding: 32px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 6px;
+            color: var(--text-primary);
+        }
+
+        input[type="text"],
+        input[type="number"],
+        input[type="date"],
+        select {
+            width: 100%;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .form-actions button {
+            flex: 1;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-secondary);
+        }
+
+        .empty-state p {
+            font-size: 14px;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 6px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-secondary);
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation: none !important;
+                transition: none !important;
+            }
+        }
+
+        .currency {
+            font-variant-numeric: tabular-nums;
+        }
+
+        .percent {
+            font-variant-numeric: tabular-nums;
+        }
+
+        .event-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .event-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px;
+        }
+
+        .event-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 12px;
+        }
+
+        .event-name {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 12px;
+        }
+
+        .event-stat {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            margin-bottom: 8px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .event-stat-label {
+            color: var(--text-secondary);
+        }
+
+        .event-stat-value {
+            font-weight: 600;
+            color: var(--text-primary);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .variance-positive {
+            color: var(--emerald-600);
+        }
+
+        .variance-negative {
+            color: var(--rose-600);
+        }
+
+        .edit-btn {
+            padding: 4px 8px;
+            font-size: 12px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            cursor: pointer;
+            color: var(--text-primary);
+        }
+
+        .edit-btn:hover {
+            background: var(--border-color);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Sales Performance Tracker</h1>
+            <div class="header-actions">
+                <button class="btn-secondary" onclick="openEventModal()">⚙️ Manage Events</button>
+                <button class="btn-primary" onclick="openAddModal()">+ New Sponsorship</button>
+                <div class="dropdown-menu">
+                    <button class="btn-secondary dropdown-btn" onclick="toggleDropdown()">⋮ More</button>
+                    <div class="dropdown-content" id="dropdownContent">
+                        <button onclick="pullFromSheets(); closeDropdown()">⬇️ Pull from Google Sheets</button>
+                        <button onclick="pushToSheets(); closeDropdown()">⬆️ Push to Google Sheets</button>
+                        <button onclick="exportData(); closeDropdown()">📥 Export to CSV</button>
+                        <div style="padding: 8px 16px; border-top: 1px solid var(--border-color); font-size: 11px; color: var(--text-secondary);">
+                            <div id="syncStatus">Ready</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="filters">
+            <select id="eventFilter" onchange="applyFilters()">
+                <option value="">All Events</option>
+            </select>
+            <select id="statusFilter" onchange="applyFilters()">
+                <option value="">All Status</option>
+                <option value="Pipeline">Pipeline</option>
+                <option value="Won">Won</option>
+                <option value="Lost">Lost</option>
+            </select>
+            <input type="text" id="searchInput" placeholder="Search by lead name..." onkeyup="applyFilters()">
+        </div>
+
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-label">Total Revenue</div>
+                <div class="metric-value currency" id="totalRevenue">$0</div>
+                <div class="metric-subtext" id="revenueCount">0 deals won</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Total Profit</div>
+                <div class="metric-value currency" id="totalProfit">$0</div>
+                <div class="metric-subtext" id="profitMargin">0% margin</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Pipeline Value</div>
+                <div class="metric-value currency" id="pipelineValue">$0</div>
+                <div class="metric-subtext" id="pipelineCount">0 opportunities</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Win Rate</div>
+                <div class="metric-value percent" id="winRate">0%</div>
+                <div class="metric-subtext" id="winRateDetail">0 of 0 deals</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Avg Deal Size</div>
+                <div class="metric-value currency" id="avgDealSize">$0</div>
+                <div class="metric-subtext">Average won deal</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Profit Per Event</div>
+                <div class="metric-value currency" id="profitPerEvent">$0</div>
+                <div class="metric-subtext">Average by event</div>
+            </div>
+        </div>
+
+        <div class="main-grid">
+            <div class="card">
+                <div class="card-title">Revenue by Event</div>
+                <div class="chart-container">
+                    <canvas id="revenueChart"></canvas>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-title">Pipeline by Likelihood</div>
+                <div class="chart-container">
+                    <canvas id="pipelineChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">All Opportunities</div>
+            <div id="dataTableContainer">
+                <div class="empty-state">
+                    <p>No opportunities yet. Click "New Opportunity" to add one.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="addModal">
+        <div class="modal-content">
+            <div class="modal-title">Add New Sponsorship</div>
+            <form onsubmit="saveOpportunity(event)">
+                <div class="form-group">
+                    <label for="eventSelect">Event *</label>
+                    <select id="eventSelect" required>
+                        <option value="">Select an event...</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="leadName">Lead Name *</label>
+                    <input type="text" id="leadName" required>
+                </div>
+                <div class="form-group">
+                    <label for="sponsor">Sponsor/Company</label>
+                    <input type="text" id="sponsor">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="dealSize">Sponsorship Value ($) *</label>
+                        <input type="number" id="dealSize" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="likelihood">Likelihood (%) *</label>
+                        <input type="number" id="likelihood" min="0" max="100" value="50" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="status">Status *</label>
+                        <select id="status" required>
+                            <option value="Pipeline">Pipeline</option>
+                            <option value="Won">Won</option>
+                            <option value="Lost">Lost</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="date">Date *</label>
+                        <input type="date" id="date" required>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary" onclick="closeAddModal()">Cancel</button>
+                    <button type="submit" class="btn-primary">Add Sponsorship</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal" id="eventModal">
+        <div class="modal-content">
+            <div class="modal-title">Manage Events</div>
+            <div id="eventsList" style="margin-bottom: 24px;"></div>
+            <form onsubmit="saveEvent(event)">
+                <div style="border-top: 1px solid var(--border-color); padding-top: 24px; margin-bottom: 24px;">
+                    <div style="font-weight: 600; margin-bottom: 16px;">Add New Event</div>
+                </div>
+                <div class="form-group">
+                    <label for="eventName">Event Name *</label>
+                    <input type="text" id="eventName" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="budgetCost">Budgeted Cost ($) *</label>
+                        <input type="number" id="budgetCost" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="actualCost">Actual Cost ($)</label>
+                        <input type="number" id="actualCost" step="0.01" value="0">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="eventDate">Event Date</label>
+                        <input type="date" id="eventDate">
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary" onclick="closeEventModal()">Close</button>
+                    <button type="submit" class="btn-primary">Add Event</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Google Sheets Configuration
+        const GOOGLE_SHEETS_CONFIG = {
+            apiKey: 'AIzaSyAdQir0IM5ssVTOPtMUApinqRvGzB1hUaM',
+            spreadsheetId: '1P9OgSo626WLHuP_UfliZo8z28e-AkpbslVhV4Hmv-7g',
+            sheetName: 'New'
+        };
+
+        let events = [];
+        let opportunities = [];
+        let revenueChart = null;
+        let pipelineChart = null;
+        let lastSyncTime = null;
+
+        // Initialize with sample data
+        function initializeData() {
+            const sampleEvents = [
+                { id: 1, name: 'LIF TO Data Sovereignty Salon', budgetCost: 0, actualCost: 0, date: '2026-09-15' },
+                { id: 2, name: 'Luminance Roundtable', budgetCost: 0, actualCost: 0, date: '2026-09-20' },
+                { id: 3, name: 'LIF Atlanta', budgetCost: 0, actualCost: 0, date: '2026-10-05' },
+                { id: 4, name: 'LIF London Salon', budgetCost: 0, actualCost: 0, date: '2026-10-10' },
+                { id: 5, name: 'London Convergence', budgetCost: 0, actualCost: 0, date: '2026-10-15' },
+                { id: 6, name: 'LIF NYC Salon', budgetCost: 0, actualCost: 0, date: '2026-10-20' },
+                { id: 7, name: 'LIF DC Salon', budgetCost: 0, actualCost: 0, date: '2026-11-01' },
+                { id: 8, name: 'LIF Chicago', budgetCost: 0, actualCost: 0, date: '2026-11-05' },
+                { id: 9, name: 'LIF Houston', budgetCost: 0, actualCost: 0, date: '2026-11-10' },
+            ];
+
+            const sampleOpportunities = [
+                { id: 1, eventId: 1, event: 'LIF TO Data Sovereignty Salon', leadName: 'Multiverse', sponsor: 'Multiverse', dealSize: 10000, status: 'Won', date: '2026-09-15', likelihood: 100 },
+                { id: 2, eventId: 1, event: 'LIF TO Data Sovereignty Salon', leadName: 'Clio', sponsor: 'Clio', dealSize: 10000, status: 'Won', date: '2026-09-15', likelihood: 100 },
+                { id: 3, eventId: 1, event: 'LIF TO Data Sovereignty Salon', leadName: 'Noticia LLP', sponsor: 'Noticia LLP', dealSize: 5000, status: 'Pipeline', date: '2026-09-15', likelihood: 50 },
+                { id: 4, eventId: 1, event: 'LIF TO Data Sovereignty Salon', leadName: 'Cohere', sponsor: 'Cohere', dealSize: 5000, status: 'Pipeline', date: '2026-09-15', likelihood: 25 },
+                { id: 5, eventId: 1, event: 'LIF TO Data Sovereignty Salon', leadName: 'Torys', sponsor: 'Torys', dealSize: 5000, status: 'Pipeline', date: '2026-09-15', likelihood: 25 },
+                { id: 6, eventId: 1, event: 'LIF TO Data Sovereignty Salon', leadName: 'Bell', sponsor: 'Bell', dealSize: 5000, status: 'Pipeline', date: '2026-09-15', likelihood: 25 },
+                { id: 7, eventId: 1, event: 'LIF TO Data Sovereignty Salon', leadName: 'Caravel', sponsor: 'Caravel', dealSize: 5000, status: 'Pipeline', date: '2026-09-15', likelihood: 25 },
+                { id: 8, eventId: 1, event: 'LIF TO Data Sovereignty Salon', leadName: 'Lexis Nexis', sponsor: 'Lexis Nexis', dealSize: 5000, status: 'Pipeline', date: '2026-09-15', likelihood: 25 },
+                { id: 9, eventId: 3, event: 'LIF Atlanta', leadName: 'Harvey', sponsor: 'Harvey', dealSize: 10000, status: 'Won', date: '2026-10-05', likelihood: 100 },
+                { id: 10, eventId: 3, event: 'LIF Atlanta', leadName: 'Laine', sponsor: 'Laine', dealSize: 17740, status: 'Won', date: '2026-10-05', likelihood: 100 },
+                { id: 11, eventId: 3, event: 'LIF Atlanta', leadName: 'Genie AI', sponsor: 'Genie AI', dealSize: 5000, status: 'Pipeline', date: '2026-10-05', likelihood: 50 },
+                { id: 12, eventId: 3, event: 'LIF Atlanta', leadName: 'Axiom', sponsor: 'Axiom', dealSize: 5000, status: 'Pipeline', date: '2026-10-05', likelihood: 50 },
+                { id: 13, eventId: 3, event: 'LIF Atlanta', leadName: 'Legora', sponsor: 'Legora', dealSize: 5000, status: 'Pipeline', date: '2026-10-05', likelihood: 50 },
+            ];
+
+            events = sampleEvents;
+            opportunities = sampleOpportunities;
+            updateDashboard();
+        }
+
+        function openAddModal() {
+            document.getElementById('addModal').classList.add('active');
+            document.getElementById('date').valueAsDate = new Date();
+            updateEventSelect();
+        }
+
+        function closeAddModal() {
+            document.getElementById('addModal').classList.remove('active');
+            document.getElementById('eventSelect').value = '';
+            document.getElementById('leadName').value = '';
+            document.getElementById('sponsor').value = '';
+            document.getElementById('dealSize').value = '';
+            document.getElementById('status').value = 'Pipeline';
+            document.getElementById('likelihood').value = '50';
+        }
+
+        function updateEventSelect() {
+            const select = document.getElementById('eventSelect');
+            const current = select.value;
+            select.innerHTML = '<option value="">Select an event...</option>';
+            events.forEach(e => {
+                select.innerHTML += `<option value="${e.id}">${escapeHtml(e.name)}</option>`;
+            });
+            select.value = current;
+        }
+
+        function openEventModal() {
+            document.getElementById('eventModal').classList.add('active');
+            displayExistingEvents();
+        }
+
+        function closeEventModal() {
+            document.getElementById('eventModal').classList.remove('active');
+            document.getElementById('eventName').value = '';
+            document.getElementById('budgetCost').value = '';
+            document.getElementById('actualCost').value = '0';
+            document.getElementById('eventDate').value = '';
+        }
+
+        function displayExistingEvents() {
+            const container = document.getElementById('eventsList');
+            if (events.length === 0) {
+                container.innerHTML = '<div class="empty-state"><p>No events yet. Add one below.</p></div>';
+                return;
+            }
+
+            let html = '<div style="font-size: 14px; margin-bottom: 16px;">Existing Events:</div>';
+            events.forEach(e => {
+                const variance = e.actualCost - e.budgetCost;
+                const varianceClass = variance > 0 ? 'variance-negative' : 'variance-positive';
+                const varianceText = variance > 0 ? `+$${formatNumber(variance)}` : `-$${formatNumber(Math.abs(variance))}`;
+
+                html += `
+                    <div style="background: var(--bg-tertiary); padding: 12px; border-radius: 6px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="font-weight: 600; margin-bottom: 4px;">${escapeHtml(e.name)}</div>
+                            <div style="font-size: 12px; color: var(--text-secondary);">Budget: $${formatNumber(e.budgetCost)} | Actual: $${formatNumber(e.actualCost)}</div>
+                            <div style="font-size: 12px; margin-top: 4px;"><span class="${varianceClass}">Variance: ${varianceText}</span></div>
+                        </div>
+                        <button type="button" class="edit-btn" onclick="editEvent(${e.id})">Edit</button>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        function editEvent(eventId) {
+            const event = events.find(e => e.id === eventId);
+            if (!event) return;
+
+            document.getElementById('eventName').value = event.name;
+            document.getElementById('budgetCost').value = event.budgetCost;
+            document.getElementById('actualCost').value = event.actualCost;
+            document.getElementById('eventDate').value = event.date;
+
+            // Store ID for update
+            document.getElementById('eventName').dataset.eventId = eventId;
+        }
+
+        function saveEvent(e) {
+            e.preventDefault();
+            const eventId = document.getElementById('eventName').dataset.eventId;
+            const name = document.getElementById('eventName').value;
+            const budgetCost = parseFloat(document.getElementById('budgetCost').value);
+            const actualCost = parseFloat(document.getElementById('actualCost').value);
+            const date = document.getElementById('eventDate').value;
+
+            if (eventId) {
+                // Update existing
+                const event = events.find(ev => ev.id === parseInt(eventId));
+                if (event) {
+                    event.name = name;
+                    event.budgetCost = budgetCost;
+                    event.actualCost = actualCost;
+                    event.date = date;
+                }
+                document.getElementById('eventName').dataset.eventId = '';
+            } else {
+                // Add new
+                const newEvent = {
+                    id: Math.max(...events.map(ev => ev.id || 0)) + 1,
+                    name, budgetCost, actualCost, date
+                };
+                events.push(newEvent);
+            }
+
+            updateDashboard();
+            displayExistingEvents();
+            document.getElementById('eventName').value = '';
+            document.getElementById('budgetCost').value = '';
+            document.getElementById('actualCost').value = '0';
+            document.getElementById('eventDate').value = '';
+        }
+
+        function saveOpportunity(e) {
+            e.preventDefault();
+            const eventId = parseInt(document.getElementById('eventSelect').value);
+            const eventObj = events.find(ev => ev.id === eventId);
+
+            if (!eventObj) {
+                alert('Please select a valid event');
+                return;
+            }
+
+            const newOpp = {
+                id: Math.max(...opportunities.map(o => o.id || 0)) + 1,
+                eventId: eventId,
+                event: eventObj.name,
+                leadName: document.getElementById('leadName').value,
+                sponsor: document.getElementById('sponsor').value,
+                dealSize: parseFloat(document.getElementById('dealSize').value),
+                status: document.getElementById('status').value,
+                date: document.getElementById('date').value,
+                likelihood: parseInt(document.getElementById('likelihood').value),
+            };
+            opportunities.push(newOpp);
+            updateDashboard();
+            closeAddModal();
+        }
+
+        function updateDashboard() {
+            updateMetrics();
+            updateCharts();
+            updateTable();
+            updateFilters();
+        }
+
+        function updateMetrics() {
+            const wonDeals = opportunities.filter(o => o.status === 'Won');
+            const totalRevenue = wonDeals.reduce((sum, o) => sum + o.dealSize, 0);
+            const totalEventCost = events.reduce((sum, e) => sum + e.actualCost, 0);
+            const profit = totalRevenue - totalEventCost;
+            const margin = totalRevenue > 0 ? Math.round((profit / totalRevenue) * 100) : 0;
+            const pipelineValue = opportunities.filter(o => o.status === 'Pipeline').reduce((sum, o) => sum + o.dealSize, 0);
+            const winRate = opportunities.length > 0 ? Math.round((wonDeals.length / opportunities.length) * 100) : 0;
+            const avgDealSize = wonDeals.length > 0 ? totalRevenue / wonDeals.length : 0;
+
+            // Profit per event
+            const eventProfits = {};
+            events.forEach(e => {
+                const eventRevenue = opportunities.filter(o => o.eventId === e.id && o.status === 'Won').reduce((sum, o) => sum + o.dealSize, 0);
+                eventProfits[e.name] = eventRevenue - e.actualCost;
+            });
+            const eventNames = Object.keys(eventProfits);
+            const avgProfitPerEvent = eventNames.length > 0 ? Object.values(eventProfits).reduce((a, b) => a + b, 0) / eventNames.length : 0;
+
+            document.getElementById('totalRevenue').textContent = formatCurrency(totalRevenue);
+            document.getElementById('revenueCount').textContent = `${wonDeals.length} deals won`;
+            document.getElementById('totalProfit').textContent = formatCurrency(profit);
+            document.getElementById('profitMargin').textContent = `${margin}% margin`;
+            document.getElementById('pipelineValue').textContent = formatCurrency(pipelineValue);
+            document.getElementById('pipelineCount').textContent = `${opportunities.filter(o => o.status === 'Pipeline').length} opportunities`;
+            document.getElementById('winRate').textContent = `${winRate}%`;
+            document.getElementById('winRateDetail').textContent = `${wonDeals.length} of ${opportunities.length} deals`;
+            document.getElementById('avgDealSize').textContent = formatCurrency(avgDealSize);
+            document.getElementById('profitPerEvent').textContent = formatCurrency(avgProfitPerEvent);
+        }
+
+        function updateCharts() {
+            // Revenue by Event (actual)
+            const eventRevenue = {};
+            const eventProfit = {};
+            events.forEach(e => {
+                const revenue = opportunities.filter(o => o.eventId === e.id && o.status === 'Won').reduce((sum, o) => sum + o.dealSize, 0);
+                eventRevenue[e.name] = revenue;
+                eventProfit[e.name] = revenue - e.actualCost;
+            });
+
+            const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+            if (revenueChart) revenueChart.destroy();
+            revenueChart = new Chart(revenueCtx, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(eventRevenue),
+                    datasets: [{
+                        label: 'Revenue',
+                        data: Object.values(eventRevenue),
+                        backgroundColor: '#10b981',
+                        borderRadius: 4,
+                        borderSkipped: false,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { callback: v => '$' + (v/1000).toFixed(0) + 'k' }
+                        }
+                    }
+                }
+            });
+
+            // Pipeline by Likelihood
+            const likelihoodBuckets = { '0-25%': 0, '26-50%': 0, '51-75%': 0, '76-100%': 0 };
+            opportunities.filter(o => o.status === 'Pipeline').forEach(o => {
+                if (o.likelihood <= 25) likelihoodBuckets['0-25%'] += o.dealSize;
+                else if (o.likelihood <= 50) likelihoodBuckets['26-50%'] += o.dealSize;
+                else if (o.likelihood <= 75) likelihoodBuckets['51-75%'] += o.dealSize;
+                else likelihoodBuckets['76-100%'] += o.dealSize;
+            });
+
+            const pipelineCtx = document.getElementById('pipelineChart').getContext('2d');
+            if (pipelineChart) pipelineChart.destroy();
+            pipelineChart = new Chart(pipelineCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(likelihoodBuckets),
+                    datasets: [{
+                        data: Object.values(likelihoodBuckets),
+                        backgroundColor: ['#ef4444', '#f59e0b', '#eab308', '#10b981'],
+                        borderColor: 'var(--bg-secondary)',
+                        borderWidth: 2,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    }
+                }
+            });
+        }
+
+        function updateTable() {
+            const filtered = getFilteredOpportunities();
+            const container = document.getElementById('dataTableContainer');
+
+            if (filtered.length === 0) {
+                container.innerHTML = '<div class="empty-state"><p>No opportunities match your filters.</p></div>';
+                return;
+            }
+
+            let html = `<table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Event</th>
+                        <th>Lead Name</th>
+                        <th>Sponsor</th>
+                        <th>Deal Size</th>
+                        <th>Status</th>
+                        <th>Likelihood</th>
+                        <th>Profit</th>
+                    </tr>
+                </thead>
+                <tbody>`;
+
+            filtered.forEach(o => {
+                const profit = o.dealSize - o.cost;
+                const statusClass = `status-${o.status.toLowerCase()}`;
+                html += `<tr>
+                    <td>${escapeHtml(o.event)}</td>
+                    <td>${escapeHtml(o.leadName)}</td>
+                    <td>${escapeHtml(o.sponsor)}</td>
+                    <td class="currency">${formatCurrency(o.dealSize)}</td>
+                    <td><span class="status-badge ${statusClass}">${o.status}</span></td>
+                    <td>${o.likelihood}%</td>
+                    <td class="currency">${formatCurrency(profit)}</td>
+                </tr>`;
+            });
+
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        function updateFilters() {
+            // Sort events by date (soonest first)
+            const sortedEvents = [...events].sort((a, b) => {
+                const dateA = new Date(a.date || '1900-01-01');
+                const dateB = new Date(b.date || '1900-01-01');
+                return dateA - dateB; // Ascending order (soonest first)
+            });
+
+            const eventSelect = document.getElementById('eventFilter');
+            const currentValue = eventSelect.value;
+            eventSelect.innerHTML = '<option value="">All Events</option>';
+            sortedEvents.forEach(e => {
+                eventSelect.innerHTML += `<option value="${e.name}">${escapeHtml(e.name)}</option>`;
+            });
+            eventSelect.value = currentValue;
+        }
+
+        function getFilteredOpportunities() {
+            const eventFilter = document.getElementById('eventFilter').value;
+            const statusFilter = document.getElementById('statusFilter').value;
+            const searchInput = document.getElementById('searchInput').value.toLowerCase();
+
+            return opportunities.filter(o => {
+                const eventMatch = !eventFilter || o.event === eventFilter;
+                const statusMatch = !statusFilter || o.status === statusFilter;
+                const searchMatch = !searchInput || o.leadName.toLowerCase().includes(searchInput);
+                return eventMatch && statusMatch && searchMatch;
+            });
+        }
+
+        function applyFilters() {
+            updateTable();
+        }
+
+        function formatCurrency(value) {
+            return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(value);
+        }
+
+        function formatNumber(value) {
+            return new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(value);
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function exportData() {
+            // Export events
+            const eventCsv = [
+                ['Event', 'Budgeted Cost', 'Actual Cost', 'Variance', 'Date'],
+                ...events.map(e => {
+                    const variance = e.actualCost - e.budgetCost;
+                    return [e.name, e.budgetCost, e.actualCost, variance, e.date];
+                })
+            ].map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
+
+            // Export opportunities
+            const oppCsv = [
+                ['Event', 'Lead Name', 'Sponsor', 'Sponsorship Value', 'Status', 'Likelihood', 'Date'],
+                ...opportunities.map(o => [o.event, o.leadName, o.sponsor, o.dealSize, o.status, o.likelihood, o.date])
+            ].map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
+
+            const fullCsv = 'EVENTS\n' + eventCsv + '\n\n\nOPPORTUNITIES\n' + oppCsv;
+
+            const blob = new Blob([fullCsv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'sales-tracker-' + new Date().toISOString().split('T')[0] + '.csv';
+            a.click();
+        }
+
+        // Close modal on outside click
+        document.getElementById('addModal').addEventListener('click', (e) => {
+            if (e.target.id === 'addModal') closeAddModal();
+        });
+
+        document.getElementById('eventModal').addEventListener('click', (e) => {
+            if (e.target.id === 'eventModal') closeEventModal();
+        });
+
+        // Google Sheets Sync Functions
+        async function pullFromSheets() {
+            try {
+                updateSyncStatus('Pulling from Google Sheets...', true);
+
+                const range = `${GOOGLE_SHEETS_CONFIG.sheetName}!A:G`;
+                const url = `https://sheets.googleapis.com/v4/spreadsheets/${GOOGLE_SHEETS_CONFIG.spreadsheetId}/values/${encodeURIComponent(range)}?key=${GOOGLE_SHEETS_CONFIG.apiKey}`;
+
+                const response = await fetch(url);
+                if (!response.ok) throw new Error('Failed to fetch from Google Sheets');
+
+                const data = await response.json();
+                const rows = data.values || [];
+
+                if (rows.length < 2) {
+                    updateSyncStatus('No data in sheet');
+                    return;
+                }
+
+                // Parse headers (first row)
+                const headers = rows[0].map(h => h.toLowerCase().trim());
+                const eventIdx = headers.indexOf('event');
+                const leadIdx = headers.indexOf('lead name');
+                const sponsorIdx = headers.indexOf('sponsor/company');
+                const valueIdx = headers.indexOf('sponsorship value');
+                const statusIdx = headers.indexOf('status');
+                const likelihoodIdx = headers.indexOf('likelihood');
+                const dateIdx = headers.indexOf('date');
+
+                // Clear existing opportunities
+                opportunities = [];
+
+                // Parse data rows
+                let id = 1;
+                for (let i = 1; i < rows.length; i++) {
+                    const row = rows[i];
+                    if (!row[eventIdx]) continue; // Skip empty rows
+
+                    const eventName = row[eventIdx];
+                    const event = events.find(e => e.name === eventName);
+
+                    opportunities.push({
+                        id: id++,
+                        eventId: event ? event.id : 0,
+                        event: eventName,
+                        leadName: row[leadIdx] || '',
+                        sponsor: row[sponsorIdx] || '',
+                        dealSize: parseFloat(row[valueIdx]) || 0,
+                        status: row[statusIdx] || 'Pipeline',
+                        date: row[dateIdx] || new Date().toISOString().split('T')[0],
+                        likelihood: parseInt(row[likelihoodIdx]) || 50,
+                    });
+                }
+
+                updateDashboard();
+                lastSyncTime = new Date();
+                updateSyncStatus(`Synced ${opportunities.length} opportunities`, false);
+            } catch (error) {
+                console.error('Sync error:', error);
+                updateSyncStatus(`Error: ${error.message}`, false);
+            }
+        }
+
+        async function pushToSheets() {
+            try {
+                updateSyncStatus('Pushing to Google Sheets...', true);
+
+                // Format data for Google Sheets
+                const data = [
+                    ['Event', 'Lead Name', 'Sponsor/Company', 'Sponsorship Value', 'Status', 'Likelihood', 'Date'],
+                    ...opportunities.map(o => [o.event, o.leadName, o.sponsor, o.dealSize, o.status, o.likelihood, o.date])
+                ];
+
+                // Note: Writing to Google Sheets via API Key isn't directly supported
+                // We'll show a message to copy/paste or use alternative method
+                const csv = data.map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
+
+                // Copy to clipboard
+                try {
+                    await navigator.clipboard.writeText(csv);
+                    updateSyncStatus('Data copied to clipboard! Paste into Google Sheets', false);
+                } catch (e) {
+                    // Fallback: trigger download
+                    const blob = new Blob([csv], { type: 'text/csv' });
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'sales-tracker.csv';
+                    a.click();
+                    updateSyncStatus('Data downloaded! Import into Google Sheets', false);
+                }
+            } catch (error) {
+                console.error('Push error:', error);
+                updateSyncStatus(`Error: ${error.message}`, false);
+            }
+        }
+
+        function updateSyncStatus(message, isSyncing) {
+            const status = document.getElementById('syncStatus');
+            status.textContent = message;
+            status.classList.toggle('syncing', isSyncing);
+            status.classList.toggle('synced', !isSyncing && message.includes('Synced'));
+        }
+
+        function toggleDropdown() {
+            const dropdown = document.getElementById('dropdownContent');
+            dropdown.classList.toggle('active');
+        }
+
+        function closeDropdown() {
+            const dropdown = document.getElementById('dropdownContent');
+            dropdown.classList.remove('active');
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            const dropdown = document.getElementById('dropdownContent');
+            const dropdownMenu = document.querySelector('.dropdown-menu');
+            if (!dropdownMenu.contains(e.target)) {
+                dropdown.classList.remove('active');
+            }
+        });
+
+        // Initialize on load
+        window.addEventListener('DOMContentLoaded', initializeData);
+    </script>
+</body>
+</html>
