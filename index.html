@@ -901,19 +901,29 @@
         }
 
         function updateMetrics() {
-            const wonDeals = opportunities.filter(o => o.status === 'Won');
+            // Get filtered opportunities based on current selections
+            const filtered = getFilteredOpportunities();
+
+            // Get relevant events for the filtered data
+            const eventFilter = document.getElementById('eventFilter').value;
+            let relevantEvents = events;
+            if (eventFilter) {
+                relevantEvents = events.filter(e => e.name === eventFilter);
+            }
+
+            const wonDeals = filtered.filter(o => o.status === 'Won');
             const totalRevenue = wonDeals.reduce((sum, o) => sum + o.dealSize, 0);
-            const totalEventCost = events.reduce((sum, e) => sum + e.actualCost, 0);
+            const totalEventCost = relevantEvents.reduce((sum, e) => sum + e.actualCost, 0);
             const profit = totalRevenue - totalEventCost;
             const margin = totalRevenue > 0 ? Math.round((profit / totalRevenue) * 100) : 0;
-            const pipelineValue = opportunities.filter(o => o.status === 'Pipeline').reduce((sum, o) => sum + o.dealSize, 0);
-            const winRate = opportunities.length > 0 ? Math.round((wonDeals.length / opportunities.length) * 100) : 0;
+            const pipelineValue = filtered.filter(o => o.status === 'Pipeline').reduce((sum, o) => sum + o.dealSize, 0);
+            const winRate = filtered.length > 0 ? Math.round((wonDeals.length / filtered.length) * 100) : 0;
             const avgDealSize = wonDeals.length > 0 ? totalRevenue / wonDeals.length : 0;
 
             // Profit per event
             const eventProfits = {};
-            events.forEach(e => {
-                const eventRevenue = opportunities.filter(o => o.eventId === e.id && o.status === 'Won').reduce((sum, o) => sum + o.dealSize, 0);
+            relevantEvents.forEach(e => {
+                const eventRevenue = filtered.filter(o => o.eventId === e.id && o.status === 'Won').reduce((sum, o) => sum + o.dealSize, 0);
                 eventProfits[e.name] = eventRevenue - e.actualCost;
             });
             const eventNames = Object.keys(eventProfits);
@@ -924,19 +934,29 @@
             document.getElementById('totalProfit').textContent = formatCurrency(profit);
             document.getElementById('profitMargin').textContent = `${margin}% margin`;
             document.getElementById('pipelineValue').textContent = formatCurrency(pipelineValue);
-            document.getElementById('pipelineCount').textContent = `${opportunities.filter(o => o.status === 'Pipeline').length} opportunities`;
+            document.getElementById('pipelineCount').textContent = `${filtered.filter(o => o.status === 'Pipeline').length} opportunities`;
             document.getElementById('winRate').textContent = `${winRate}%`;
-            document.getElementById('winRateDetail').textContent = `${wonDeals.length} of ${opportunities.length} deals`;
+            document.getElementById('winRateDetail').textContent = `${wonDeals.length} of ${filtered.length} deals`;
             document.getElementById('avgDealSize').textContent = formatCurrency(avgDealSize);
             document.getElementById('profitPerEvent').textContent = formatCurrency(avgProfitPerEvent);
         }
 
         function updateCharts() {
+            // Get filtered opportunities based on current selections
+            const filtered = getFilteredOpportunities();
+
+            // Get relevant events for the filtered data
+            const eventFilter = document.getElementById('eventFilter').value;
+            let relevantEvents = events;
+            if (eventFilter) {
+                relevantEvents = events.filter(e => e.name === eventFilter);
+            }
+
             // Revenue by Event (actual)
             const eventRevenue = {};
             const eventProfit = {};
-            events.forEach(e => {
-                const revenue = opportunities.filter(o => o.eventId === e.id && o.status === 'Won').reduce((sum, o) => sum + o.dealSize, 0);
+            relevantEvents.forEach(e => {
+                const revenue = filtered.filter(o => o.eventId === e.id && o.status === 'Won').reduce((sum, o) => sum + o.dealSize, 0);
                 eventRevenue[e.name] = revenue;
                 eventProfit[e.name] = revenue - e.actualCost;
             });
@@ -972,7 +992,7 @@
 
             // Pipeline by Likelihood
             const likelihoodBuckets = { '0-25%': 0, '26-50%': 0, '51-75%': 0, '76-100%': 0 };
-            opportunities.filter(o => o.status === 'Pipeline').forEach(o => {
+            filtered.filter(o => o.status === 'Pipeline').forEach(o => {
                 if (o.likelihood <= 25) likelihoodBuckets['0-25%'] += o.dealSize;
                 else if (o.likelihood <= 50) likelihoodBuckets['26-50%'] += o.dealSize;
                 else if (o.likelihood <= 75) likelihoodBuckets['51-75%'] += o.dealSize;
@@ -1074,6 +1094,8 @@
         }
 
         function applyFilters() {
+            updateMetrics();
+            updateCharts();
             updateTable();
         }
 
