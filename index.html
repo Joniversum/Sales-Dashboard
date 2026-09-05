@@ -718,9 +718,43 @@
         let pipelineChart = null;
         let lastSyncTime = null;
 
+        // Save data to localStorage
+        function saveToLocalStorage() {
+            try {
+                localStorage.setItem('sales_tracker_events', JSON.stringify(events));
+                localStorage.setItem('sales_tracker_opportunities', JSON.stringify(opportunities));
+            } catch (e) {
+                console.warn('Could not save to localStorage:', e);
+            }
+        }
+
+        // Load data from localStorage
+        function loadFromLocalStorage() {
+            try {
+                const savedEvents = localStorage.getItem('sales_tracker_events');
+                const savedOpportunities = localStorage.getItem('sales_tracker_opportunities');
+
+                if (savedEvents) {
+                    events = JSON.parse(savedEvents);
+                }
+                if (savedOpportunities) {
+                    opportunities = JSON.parse(savedOpportunities);
+                }
+                return savedEvents || savedOpportunities; // Return true if any data was loaded
+            } catch (e) {
+                console.warn('Could not load from localStorage:', e);
+                return false;
+            }
+        }
+
         // Initialize with sample data
         function initializeData() {
-            const sampleEvents = [
+            // Try to load from localStorage first
+            const hasLocalData = loadFromLocalStorage();
+
+            // If no local data, use sample data
+            if (!hasLocalData) {
+                const sampleEvents = [
                 { id: 1, name: 'LIF TO Data Sovereignty Salon', budgetCost: 0, actualCost: 0, date: '2026-09-15' },
                 { id: 2, name: 'Luminance Roundtable', budgetCost: 0, actualCost: 0, date: '2026-09-20' },
                 { id: 3, name: 'LIF Atlanta', budgetCost: 0, actualCost: 0, date: '2026-10-05' },
@@ -748,8 +782,11 @@
                 { id: 13, eventId: 3, event: 'LIF Atlanta', leadName: 'Legora', sponsor: 'Legora', dealSize: 5000, status: 'Pipeline', date: '2026-10-05', likelihood: 50 },
             ];
 
-            events = sampleEvents;
-            opportunities = sampleOpportunities;
+                events = sampleEvents;
+                opportunities = sampleOpportunities;
+                saveToLocalStorage();
+            }
+
             updateDashboard();
         }
 
@@ -757,6 +794,13 @@
             document.getElementById('addModal').classList.add('active');
             document.getElementById('date').valueAsDate = new Date();
             updateEventSelect();
+            // Reset form
+            document.getElementById('eventSelect').value = '';
+            document.getElementById('leadName').value = '';
+            document.getElementById('sponsor').value = '';
+            document.getElementById('dealSize').value = '';
+            document.getElementById('likelihood').value = '50';
+            document.getElementById('status').value = 'Pipeline';
         }
 
         function closeAddModal() {
@@ -859,6 +903,7 @@
                 events.push(newEvent);
             }
 
+            saveToLocalStorage();
             updateDashboard();
             displayExistingEvents();
             document.getElementById('eventName').value = '';
@@ -869,35 +914,92 @@
 
         function saveOpportunity(e) {
             e.preventDefault();
-            const eventId = parseInt(document.getElementById('eventSelect').value);
-            const eventObj = events.find(ev => ev.id === eventId);
 
-            if (!eventObj) {
-                alert('Please select a valid event');
-                return;
+            try {
+                const eventSelectValue = document.getElementById('eventSelect').value;
+                if (!eventSelectValue) {
+                    alert('Please select a valid event');
+                    return;
+                }
+
+                const eventId = parseInt(eventSelectValue);
+                const eventObj = events.find(ev => ev.id === eventId);
+
+                if (!eventObj) {
+                    alert('Please select a valid event');
+                    return;
+                }
+
+                const leadName = document.getElementById('leadName').value;
+                if (!leadName) {
+                    alert('Please enter a lead name');
+                    return;
+                }
+
+                const dealSizeStr = document.getElementById('dealSize').value;
+                if (!dealSizeStr) {
+                    alert('Please enter a sponsorship value');
+                    return;
+                }
+
+                const newOpp = {
+                    id: Math.max(...opportunities.map(o => o.id || 0), 0) + 1,
+                    eventId: eventId,
+                    event: eventObj.name,
+                    leadName: leadName,
+                    sponsor: document.getElementById('sponsor').value,
+                    dealSize: parseFloat(dealSizeStr),
+                    status: document.getElementById('status').value,
+                    date: document.getElementById('date').value,
+                    likelihood: parseInt(document.getElementById('likelihood').value),
+                };
+
+                opportunities.push(newOpp);
+                saveToLocalStorage();
+                updateDashboard();
+                closeAddModal();
+            } catch (error) {
+                console.error('Error saving opportunity:', error);
+                alert('Error saving sponsorship: ' + error.message);
             }
-
-            const newOpp = {
-                id: Math.max(...opportunities.map(o => o.id || 0)) + 1,
-                eventId: eventId,
-                event: eventObj.name,
-                leadName: document.getElementById('leadName').value,
-                sponsor: document.getElementById('sponsor').value,
-                dealSize: parseFloat(document.getElementById('dealSize').value),
-                status: document.getElementById('status').value,
-                date: document.getElementById('date').value,
-                likelihood: parseInt(document.getElementById('likelihood').value),
-            };
-            opportunities.push(newOpp);
-            updateDashboard();
-            closeAddModal();
         }
 
         function updateDashboard() {
-            updateMetrics();
-            updateCharts();
+            updateMetricsUnfiltered();
+            updateChartsUnfiltered();
             updateTable();
             updateFilters();
+        }
+
+        function updateMetricsUnfiltered() {
+            const wonDeals = opportunities.filter(o => o.status === 'Won');
+            const totalRevenue = wonDeals.reduce((sum, o) => sum + o.dealSize, 0);
+            const totalEventCost = events.reduce((sum, e) => sum + e.actualCost, 0);
+            const profit = totalRevenue - totalEventCost;
+            const margin = totalRevenue > 0 ? Math.round((profit / totalRevenue) * 100) : 0;
+            const pipelineValue = opportunities.filter(o => o.status === 'Pipeline').reduce((sum, o) => sum + o.dealSize, 0);
+            const winRate = opportunities.length > 0 ? Math.round((wonDeals.length / opportunities.length) * 100) : 0;
+            const avgDealSize = wonDeals.length > 0 ? totalRevenue / wonDeals.length : 0;
+
+            // Profit per event
+            const eventProfits = {};
+            events.forEach(e => {
+                const eventRevenue = opportunities.filter(o => o.eventId === e.id && o.status === 'Won').reduce((sum, o) => sum + o.dealSize, 0);
+                eventProfits[e.name] = eventRevenue - e.actualCost;
+            });
+            const eventNames = Object.keys(eventProfits);
+            const avgProfitPerEvent = eventNames.length > 0 ? Object.values(eventProfits).reduce((a, b) => a + b, 0) / eventNames.length : 0;
+
+            document.getElementById('totalRevenue').textContent = formatCurrency(totalRevenue);
+            document.getElementById('revenueCount').textContent = `${wonDeals.length} deals won`;
+            document.getElementById('totalProfit').textContent = formatCurrency(profit);
+            document.getElementById('profitMargin').textContent = `${margin}% margin`;
+            document.getElementById('pipelineValue').textContent = formatCurrency(pipelineValue);
+            document.getElementById('pipelineCount').textContent = `${opportunities.filter(o => o.status === 'Pipeline').length} opportunities`;
+            document.getElementById('winRate').textContent = `${winRate}%`;
+            document.getElementById('winRateDetail').textContent = `${wonDeals.length} of ${opportunities.length} deals`;
+            document.getElementById('avgDealSize').textContent = formatCurrency(avgDealSize);
+            document.getElementById('profitPerEvent').textContent = formatCurrency(avgProfitPerEvent);
         }
 
         function updateMetrics() {
@@ -939,6 +1041,77 @@
             document.getElementById('winRateDetail').textContent = `${wonDeals.length} of ${filtered.length} deals`;
             document.getElementById('avgDealSize').textContent = formatCurrency(avgDealSize);
             document.getElementById('profitPerEvent').textContent = formatCurrency(avgProfitPerEvent);
+        }
+
+        function updateChartsUnfiltered() {
+            // Revenue by Event (actual)
+            const eventRevenue = {};
+            const eventProfit = {};
+            events.forEach(e => {
+                const revenue = opportunities.filter(o => o.eventId === e.id && o.status === 'Won').reduce((sum, o) => sum + o.dealSize, 0);
+                eventRevenue[e.name] = revenue;
+                eventProfit[e.name] = revenue - e.actualCost;
+            });
+
+            const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+            if (revenueChart) revenueChart.destroy();
+            revenueChart = new Chart(revenueCtx, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(eventRevenue),
+                    datasets: [{
+                        label: 'Revenue',
+                        data: Object.values(eventRevenue),
+                        backgroundColor: '#10b981',
+                        borderRadius: 4,
+                        borderSkipped: false,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { callback: v => '$' + (v/1000).toFixed(0) + 'k' }
+                        }
+                    }
+                }
+            });
+
+            // Pipeline by Likelihood
+            const likelihoodBuckets = { '0-25%': 0, '26-50%': 0, '51-75%': 0, '76-100%': 0 };
+            opportunities.filter(o => o.status === 'Pipeline').forEach(o => {
+                if (o.likelihood <= 25) likelihoodBuckets['0-25%'] += o.dealSize;
+                else if (o.likelihood <= 50) likelihoodBuckets['26-50%'] += o.dealSize;
+                else if (o.likelihood <= 75) likelihoodBuckets['51-75%'] += o.dealSize;
+                else likelihoodBuckets['76-100%'] += o.dealSize;
+            });
+
+            const pipelineCtx = document.getElementById('pipelineChart').getContext('2d');
+            if (pipelineChart) pipelineChart.destroy();
+            pipelineChart = new Chart(pipelineCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(likelihoodBuckets),
+                    datasets: [{
+                        data: Object.values(likelihoodBuckets),
+                        backgroundColor: ['#ef4444', '#f59e0b', '#eab308', '#10b981'],
+                        borderColor: 'var(--bg-secondary)',
+                        borderWidth: 2,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    }
+                }
+            });
         }
 
         function updateCharts() {
@@ -1202,6 +1375,7 @@
                     });
                 }
 
+                saveToLocalStorage();
                 updateDashboard();
                 lastSyncTime = new Date();
                 updateSyncStatus(`Synced ${opportunities.length} opportunities`, false);
