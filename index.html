@@ -709,7 +709,8 @@
         const GOOGLE_SHEETS_CONFIG = {
             apiKey: 'AIzaSyAdQir0IM5ssVTOPtMUApinqRvGzB1hUaM',
             spreadsheetId: '1P9OgSo626WLHuP_UfliZo8z28e-AkpbslVhV4Hmv-7g',
-            sheetName: 'New'
+            sheetName: 'New',
+            appsScriptUrl: 'https://script.google.com/macros/s/AKfycbxz_fOiAyuUcr68L9ZXiUQ86hluiaZQQN6Z3VWtHE3Q8X8E2rpvpNUKM8qcNuhSrJcx-w/exec'
         };
 
         let events = [];
@@ -904,6 +905,7 @@
             }
 
             saveToLocalStorage();
+            autoSyncToSheets();
             updateDashboard();
             displayExistingEvents();
             document.getElementById('eventName').value = '';
@@ -956,6 +958,7 @@
 
                 opportunities.push(newOpp);
                 saveToLocalStorage();
+                autoSyncToSheets();
                 updateDashboard();
                 closeAddModal();
             } catch (error) {
@@ -1387,35 +1390,49 @@
 
         async function pushToSheets() {
             try {
-                updateSyncStatus('Pushing to Google Sheets...', true);
+                updateSyncStatus('Syncing to Google Sheets...', true);
 
-                // Format data for Google Sheets
-                const data = [
-                    ['Event', 'Lead Name', 'Sponsor/Company', 'Sponsorship Value', 'Status', 'Likelihood', 'Date'],
-                    ...opportunities.map(o => [o.event, o.leadName, o.sponsor, o.dealSize, o.status, o.likelihood, o.date])
-                ];
+                const payload = {
+                    opportunities: opportunities,
+                    events: events,
+                    timestamp: new Date().toISOString()
+                };
 
-                // Note: Writing to Google Sheets via API Key isn't directly supported
-                // We'll show a message to copy/paste or use alternative method
-                const csv = data.map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
+                const response = await fetch(GOOGLE_SHEETS_CONFIG.appsScriptUrl, {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                });
 
-                // Copy to clipboard
-                try {
-                    await navigator.clipboard.writeText(csv);
-                    updateSyncStatus('Data copied to clipboard! Paste into Google Sheets', false);
-                } catch (e) {
-                    // Fallback: trigger download
-                    const blob = new Blob([csv], { type: 'text/csv' });
-                    const url = window.URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = 'sales-tracker.csv';
-                    a.click();
-                    updateSyncStatus('Data downloaded! Import into Google Sheets', false);
+                const result = await response.json();
+
+                if (result.success) {
+                    updateSyncStatus('Synced to Google Sheets', false);
+                    lastSyncTime = new Date();
+                } else {
+                    updateSyncStatus(`Sync error: ${result.error}`, false);
                 }
             } catch (error) {
                 console.error('Push error:', error);
-                updateSyncStatus(`Error: ${error.message}`, false);
+                updateSyncStatus(`Sync error: ${error.message}`, false);
+            }
+        }
+
+        async function autoSyncToSheets() {
+            try {
+                const payload = {
+                    opportunities: opportunities,
+                    events: events,
+                    timestamp: new Date().toISOString()
+                };
+
+                await fetch(GOOGLE_SHEETS_CONFIG.appsScriptUrl, {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                });
+
+                lastSyncTime = new Date();
+            } catch (error) {
+                console.error('Auto-sync error:', error);
             }
         }
 
@@ -1446,7 +1463,12 @@
         });
 
         // Initialize on load
-        window.addEventListener('DOMContentLoaded', initializeData);
+        window.addEventListener('DOMContentLoaded', async () => {
+            initializeData();
+            // Auto-sync on page load
+            await new Promise(resolve => setTimeout(resolve, 500));
+            autoSyncToSheets();
+        });
     </script>
 </body>
 </html>
