@@ -1480,6 +1480,7 @@
                     return;
                 }
                 opp.dealSize = newValue;
+                saveToLocalStorage();
                 updateMetrics();
                 updateCharts();
                 updateTable();
@@ -1531,6 +1532,7 @@
                         opp.likelihood = 100;
                     }
 
+                    saveToLocalStorage();
                     dropdown.remove();
                     updateMetrics();
                     updateCharts();
@@ -1596,6 +1598,7 @@
                     return;
                 }
                 opp.likelihood = newValue;
+                saveToLocalStorage();
                 updateMetrics();
                 updateCharts();
                 updateTable();
