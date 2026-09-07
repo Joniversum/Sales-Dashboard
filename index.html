@@ -97,6 +97,18 @@
             gap: 16px;
         }
 
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header-logo {
+            height: 40px;
+            width: auto;
+            max-width: 150px;
+        }
+
         .sync-status {
             font-size: 11px;
             color: var(--text-secondary);
@@ -529,18 +541,21 @@
 <body>
     <div class="container">
         <header>
-            <h1>Sales Performance Tracker</h1>
+            <div class="header-left">
+                <img src="data:image/png;base64,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" alt="ADB INSIGHTS" class="header-logo">
+                <h1>Sales Performance Tracker</h1>
+            </div>
             <div class="header-actions">
                 <button class="btn-secondary" onclick="openEventModal()">⚙️ Manage Events</button>
                 <button class="btn-primary" onclick="openAddModal()">+ New Sponsorship</button>
                 <div class="dropdown-menu">
                     <button class="btn-secondary dropdown-btn" onclick="toggleDropdown()">⋮ More</button>
                     <div class="dropdown-content" id="dropdownContent">
-                        <button onclick="pullFromSheets(); closeDropdown()">⬇️ Pull from Google Sheets</button>
-                        <button onclick="pushToSheets(); closeDropdown()">⬆️ Push to Google Sheets</button>
+                        <button onclick="openAdminModal(); closeDropdown()" style="border-bottom: 1px solid var(--border-color);">🔧 Admin - Delete Events</button>
+                        <button onclick="pullFromSheets(); closeDropdown()">📂 Restore from Google Sheets Backup</button>
                         <button onclick="exportData(); closeDropdown()">📥 Export to CSV</button>
                         <div style="padding: 8px 16px; border-top: 1px solid var(--border-color); font-size: 11px; color: var(--text-secondary);">
-                            <div id="syncStatus">Ready</div>
+                            <div id="syncStatus" style="color: var(--emerald-600);">✓ Auto-backing up</div>
                         </div>
                     </div>
                 </div>
@@ -704,6 +719,22 @@
         </div>
     </div>
 
+    <div class="modal" id="adminModal">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-title">Delete Past Events</div>
+            <div style="margin-bottom: 20px; padding: 12px; background: var(--rose-100); border-radius: 6px; border-left: 4px solid var(--rose-600);">
+                <div style="font-size: 13px; color: var(--rose-600); font-weight: 500;">⚠️ Warning: Deleting an event will permanently remove it and all associated sponsorships. This cannot be undone.</div>
+            </div>
+            <div id="adminEventsList" style="max-height: 400px; overflow-y: auto; margin-bottom: 20px; border: 1px solid var(--border-color); border-radius: 6px;">
+                <!-- Events will be populated here -->
+            </div>
+            <div class="form-actions">
+                <button type="button" class="btn-secondary" onclick="closeAdminModal()">Cancel</button>
+                <button type="button" class="btn-secondary" id="deleteBtn" style="opacity: 0.5; cursor: not-allowed;" onclick="confirmDeleteEvents()" disabled>Delete Selected Events</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Google Sheets Configuration
         const GOOGLE_SHEETS_CONFIG = {
@@ -837,6 +868,107 @@
             document.getElementById('eventDate').value = '';
         }
 
+        function openAdminModal() {
+            document.getElementById('adminModal').classList.add('active');
+            displayAdminEventsList();
+        }
+
+        function closeAdminModal() {
+            document.getElementById('adminModal').classList.remove('active');
+            document.querySelectorAll('.admin-event-checkbox').forEach(cb => cb.checked = false);
+            updateDeleteButton();
+        }
+
+        function displayAdminEventsList() {
+            const container = document.getElementById('adminEventsList');
+
+            if (events.length === 0) {
+                container.innerHTML = '<div style="padding: 24px; text-align: center; color: var(--text-secondary);">No events to delete</div>';
+                return;
+            }
+
+            // Sort events by date (ascending - soonest first)
+            const sortedEvents = [...events].sort((a, b) => {
+                const dateA = new Date(a.date || '1900-01-01');
+                const dateB = new Date(b.date || '1900-01-01');
+                return dateA - dateB;
+            });
+
+            let html = '';
+            sortedEvents.forEach(e => {
+                const oppCount = opportunities.filter(o => o.eventId === e.id).length;
+                const eventDate = e.date ? new Date(e.date).toLocaleDateString() : 'No date';
+
+                html += `
+                    <div style="padding: 12px 16px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; gap: 12px;">
+                        <input type="checkbox" class="admin-event-checkbox" data-event-id="${e.id}" onchange="updateDeleteButton()">
+                        <div style="flex: 1;">
+                            <div style="font-weight: 500;">${escapeHtml(e.name)}</div>
+                            <div style="font-size: 12px; color: var(--text-secondary);">
+                                ${eventDate} • ${oppCount} sponsorships
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        function updateDeleteButton() {
+            const checkedCount = document.querySelectorAll('.admin-event-checkbox:checked').length;
+            const deleteBtn = document.getElementById('deleteBtn');
+
+            if (checkedCount > 0) {
+                deleteBtn.disabled = false;
+                deleteBtn.style.opacity = '1';
+                deleteBtn.style.cursor = 'pointer';
+                deleteBtn.textContent = `Delete Selected Events (${checkedCount})`;
+            } else {
+                deleteBtn.disabled = true;
+                deleteBtn.style.opacity = '0.5';
+                deleteBtn.style.cursor = 'not-allowed';
+                deleteBtn.textContent = 'Delete Selected Events';
+            }
+        }
+
+        function confirmDeleteEvents() {
+            const selectedIds = Array.from(document.querySelectorAll('.admin-event-checkbox:checked'))
+                .map(cb => parseInt(cb.dataset.eventId));
+
+            if (selectedIds.length === 0) return;
+
+            const selectedEvents = events.filter(e => selectedIds.includes(e.id));
+            const eventNames = selectedEvents.map(e => `"${escapeHtml(e.name)}"`).join(', ');
+
+            const confirmed = confirm(
+                `Are you sure you want to delete ${selectedIds.length} event(s)?\n\n${eventNames}\n\nThis will also permanently delete all ${opportunities.filter(o => selectedIds.includes(o.eventId)).length} associated sponsorships. This cannot be undone.`
+            );
+
+            if (confirmed) {
+                deleteSelectedEvents(selectedIds);
+            }
+        }
+
+        function deleteSelectedEvents(eventIds) {
+            // Delete events
+            events = events.filter(e => !eventIds.includes(e.id));
+
+            // Delete associated opportunities
+            opportunities = opportunities.filter(o => !eventIds.includes(o.eventId));
+
+            // Save changes
+            saveToLocalStorage();
+            updateDashboard();
+            autoBackupToSheets();
+
+            // Refresh the admin list or close
+            displayAdminEventsList();
+
+            // Show confirmation
+            alert('Events and associated sponsorships deleted successfully.');
+        }
+
         function displayExistingEvents() {
             const container = document.getElementById('eventsList');
             if (events.length === 0) {
@@ -905,9 +1037,9 @@
             }
 
             saveToLocalStorage();
-            autoSyncToSheets();
             updateDashboard();
             displayExistingEvents();
+            autoBackupToSheets();
             document.getElementById('eventName').value = '';
             document.getElementById('budgetCost').value = '';
             document.getElementById('actualCost').value = '0';
@@ -958,8 +1090,8 @@
 
                 opportunities.push(newOpp);
                 saveToLocalStorage();
-                autoSyncToSheets();
                 updateDashboard();
+                autoBackupToSheets();
                 closeAddModal();
             } catch (error) {
                 console.error('Error saving opportunity:', error);
@@ -1216,13 +1348,11 @@
                         <th>Deal Size</th>
                         <th>Status</th>
                         <th>Likelihood</th>
-                        <th>Profit</th>
                     </tr>
                 </thead>
                 <tbody>`;
 
             filtered.forEach(o => {
-                const profit = o.dealSize - o.cost;
                 const statusClass = `status-${o.status.toLowerCase()}`;
                 html += `<tr>
                     <td>${escapeHtml(o.event)}</td>
@@ -1231,7 +1361,6 @@
                     <td class="currency">${formatCurrency(o.dealSize)}</td>
                     <td><span class="status-badge ${statusClass}">${o.status}</span></td>
                     <td>${o.likelihood}%</td>
-                    <td class="currency">${formatCurrency(profit)}</td>
                 </tr>`;
             });
 
@@ -1324,22 +1453,69 @@
             if (e.target.id === 'eventModal') closeEventModal();
         });
 
+        document.getElementById('adminModal').addEventListener('click', (e) => {
+            if (e.target.id === 'adminModal') closeAdminModal();
+        });
+
+        // Auto-backup to Google Sheets (called after each save)
+        async function autoBackupToSheets() {
+            try {
+                const payload = {
+                    opportunities: opportunities,
+                    events: events,
+                    timestamp: new Date().toISOString()
+                };
+
+                const response = await fetch(GOOGLE_SHEETS_CONFIG.appsScriptUrl, {
+                    method: 'POST',
+                    mode: 'cors',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                if (response.ok) {
+                    try {
+                        const result = await response.json();
+                        if (result.success) {
+                            lastSyncTime = new Date();
+                            updateSyncStatus(`Backup saved`);
+                        }
+                    } catch (parseError) {
+                        // Response was successful but not valid JSON
+                        lastSyncTime = new Date();
+                        updateSyncStatus(`Backup saved`);
+                    }
+                }
+            } catch (error) {
+                // Silently log backup errors - data is safe locally
+                console.debug('Auto-backup note:', error.message);
+            }
+        }
+
         // Google Sheets Sync Functions
         async function pullFromSheets() {
             try {
-                updateSyncStatus('Pulling from Google Sheets...', true);
+                updateSyncStatus('Loading backup from Google Sheets...', true);
 
                 const range = `${GOOGLE_SHEETS_CONFIG.sheetName}!A:G`;
                 const url = `https://sheets.googleapis.com/v4/spreadsheets/${GOOGLE_SHEETS_CONFIG.spreadsheetId}/values/${encodeURIComponent(range)}?key=${GOOGLE_SHEETS_CONFIG.apiKey}`;
 
-                const response = await fetch(url);
-                if (!response.ok) throw new Error('Failed to fetch from Google Sheets');
+                const response = await fetch(url, {
+                    method: 'GET',
+                    mode: 'cors'
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Google Sheets API error ${response.status}: ${response.statusText}`);
+                }
 
                 const data = await response.json();
                 const rows = data.values || [];
 
                 if (rows.length < 2) {
-                    updateSyncStatus('No data in sheet');
+                    updateSyncStatus('No backup data found in Google Sheets', false);
                     return;
                 }
 
@@ -1381,16 +1557,16 @@
                 saveToLocalStorage();
                 updateDashboard();
                 lastSyncTime = new Date();
-                updateSyncStatus(`Synced ${opportunities.length} opportunities`, false);
+                updateSyncStatus(`Loaded ${opportunities.length} opportunities from backup`, false);
             } catch (error) {
-                console.error('Sync error:', error);
-                updateSyncStatus(`Error: ${error.message}`, false);
+                console.error('Load backup error:', error);
+                updateSyncStatus(`Error loading backup: ${error.message}`, false);
             }
         }
 
         async function pushToSheets() {
             try {
-                updateSyncStatus('Syncing to Google Sheets...', true);
+                updateSyncStatus('Saving backup to Google Sheets...', true);
 
                 const payload = {
                     opportunities: opportunities,
@@ -1400,47 +1576,56 @@
 
                 const response = await fetch(GOOGLE_SHEETS_CONFIG.appsScriptUrl, {
                     method: 'POST',
+                    mode: 'cors',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
                     body: JSON.stringify(payload)
                 });
 
-                const result = await response.json();
+                if (!response.ok) {
+                    throw new Error(`Apps Script error ${response.status}: ${response.statusText}`);
+                }
 
-                if (result.success) {
-                    updateSyncStatus('Synced to Google Sheets', false);
+                try {
+                    const result = await response.json();
+                    if (result.success) {
+                        updateSyncStatus(`Backup saved (${opportunities.length} opportunities, ${events.length} events)`, false);
+                        lastSyncTime = new Date();
+                    } else {
+                        updateSyncStatus(`Backup error: ${result.error || 'Unknown error'}`, false);
+                    }
+                } catch (parseError) {
+                    // Response was successful but not valid JSON (Apps Script might return plain text)
+                    updateSyncStatus(`Backup saved (${opportunities.length} opportunities, ${events.length} events)`, false);
                     lastSyncTime = new Date();
-                } else {
-                    updateSyncStatus(`Sync error: ${result.error}`, false);
                 }
             } catch (error) {
-                console.error('Push error:', error);
-                updateSyncStatus(`Sync error: ${error.message}`, false);
+                console.error('Save backup error:', error);
+                updateSyncStatus(`Error saving backup: ${error.message}`, false);
             }
         }
 
-        async function autoSyncToSheets() {
-            try {
-                const payload = {
-                    opportunities: opportunities,
-                    events: events,
-                    timestamp: new Date().toISOString()
-                };
-
-                await fetch(GOOGLE_SHEETS_CONFIG.appsScriptUrl, {
-                    method: 'POST',
-                    body: JSON.stringify(payload)
-                });
-
-                lastSyncTime = new Date();
-            } catch (error) {
-                console.error('Auto-sync error:', error);
-            }
-        }
 
         function updateSyncStatus(message, isSyncing) {
             const status = document.getElementById('syncStatus');
-            status.textContent = message;
+            if (isSyncing) {
+                status.textContent = message;
+                status.style.color = 'var(--text-secondary)';
+            } else {
+                // Show different messages based on context
+                if (message.includes('Backup saved') || message === 'Backup saved') {
+                    // Auto-backup - show brief message
+                    status.textContent = '✓ Auto-backed up';
+                    status.style.color = 'var(--emerald-600)';
+                } else {
+                    // Manual operations - show more detail
+                    const timeStr = lastSyncTime ? lastSyncTime.toLocaleTimeString() : 'Never';
+                    status.textContent = `${message} • ${timeStr}`;
+                    status.style.color = 'var(--text-secondary)';
+                }
+            }
             status.classList.toggle('syncing', isSyncing);
-            status.classList.toggle('synced', !isSyncing && message.includes('Synced'));
         }
 
         function toggleDropdown() {
@@ -1453,6 +1638,7 @@
             dropdown.classList.remove('active');
         }
 
+
         // Close dropdown when clicking outside
         document.addEventListener('click', (e) => {
             const dropdown = document.getElementById('dropdownContent');
@@ -1463,11 +1649,8 @@
         });
 
         // Initialize on load
-        window.addEventListener('DOMContentLoaded', async () => {
+        window.addEventListener('DOMContentLoaded', () => {
             initializeData();
-            // Auto-sync on page load
-            await new Promise(resolve => setTimeout(resolve, 500));
-            autoSyncToSheets();
         });
     </script>
 </body>
