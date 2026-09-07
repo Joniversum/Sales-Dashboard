@@ -362,6 +362,57 @@
             color: var(--rose-600);
         }
 
+        .editable-cell {
+            cursor: pointer;
+            position: relative;
+        }
+
+        .editable-cell:hover {
+            background: var(--bg-tertiary);
+            border-radius: 4px;
+        }
+
+        .inline-edit-input {
+            padding: 6px 8px;
+            border: 2px solid var(--accent-color);
+            border-radius: 4px;
+            font-size: 14px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-width: 100px;
+        }
+
+        .inline-edit-select {
+            padding: 6px 8px;
+            border: 2px solid var(--accent-color);
+            border-radius: 4px;
+            font-size: 14px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-width: 120px;
+        }
+
+        .custom-dropdown {
+            position: fixed;
+            background: var(--bg-primary);
+            border: 2px solid var(--accent-color);
+            border-radius: 4px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+            z-index: 2000;
+            min-width: 140px;
+        }
+
+        .custom-dropdown-item {
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 14px;
+            color: var(--text-primary);
+        }
+
+        .custom-dropdown-item:hover {
+            background: var(--bg-tertiary);
+        }
+
         .modal {
             display: none;
             position: fixed;
@@ -542,7 +593,6 @@
     <div class="container">
         <header>
             <div class="header-left">
-                <img src="data:image/png;base64,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" alt="ADB INSIGHTS" class="header-logo">
                 <h1>Sales Performance Tracker</h1>
             </div>
             <div class="header-actions">
@@ -1030,7 +1080,7 @@
             } else {
                 // Add new
                 const newEvent = {
-                    id: Math.max(...events.map(ev => ev.id || 0)) + 1,
+                    id: (Math.max(...events.map(ev => ev.id || 0), 0)) + 1,
                     name, budgetCost, actualCost, date
                 };
                 events.push(newEvent);
@@ -1039,11 +1089,8 @@
             saveToLocalStorage();
             updateDashboard();
             displayExistingEvents();
+            closeEventModal();
             autoBackupToSheets();
-            document.getElementById('eventName').value = '';
-            document.getElementById('budgetCost').value = '';
-            document.getElementById('actualCost').value = '0';
-            document.getElementById('eventDate').value = '';
         }
 
         function saveOpportunity(e) {
@@ -1358,9 +1405,9 @@
                     <td>${escapeHtml(o.event)}</td>
                     <td>${escapeHtml(o.leadName)}</td>
                     <td>${escapeHtml(o.sponsor)}</td>
-                    <td class="currency">${formatCurrency(o.dealSize)}</td>
-                    <td><span class="status-badge ${statusClass}">${o.status}</span></td>
-                    <td>${o.likelihood}%</td>
+                    <td class="currency editable-cell" onclick="editDealSize(event, ${o.id})" data-value="${o.dealSize}">${formatCurrency(o.dealSize)}</td>
+                    <td onclick="editStatus(event, ${o.id})" class="editable-cell"><span class="status-badge ${statusClass}">${o.status}</span></td>
+                    <td class="editable-cell" onclick="editLikelihood(event, ${o.id})" data-value="${o.likelihood}">${o.likelihood}%</td>
                 </tr>`;
             });
 
@@ -1402,6 +1449,171 @@
             updateMetrics();
             updateCharts();
             updateTable();
+        }
+
+        function editDealSize(event, opportunityId) {
+            event.stopPropagation();
+            const cell = event.target;
+            const opp = opportunities.find(o => o.id === opportunityId);
+            if (!opp) return;
+
+            const currentValue = opp.dealSize;
+            const input = document.createElement('input');
+            input.type = 'number';
+            input.step = '0.01';
+            input.value = currentValue;
+            input.className = 'inline-edit-input';
+
+            cell.textContent = '';
+            cell.appendChild(input);
+            input.focus();
+            input.select();
+
+            let isProcessing = false;
+
+            function saveChange() {
+                if (isProcessing) return;
+                isProcessing = true;
+
+                const newValue = parseFloat(input.value);
+                if (isNaN(newValue) || newValue < 0) {
+                    updateTable();
+                    return;
+                }
+                opp.dealSize = newValue;
+                updateMetrics();
+                updateCharts();
+                updateTable();
+                autoBackupToSheets();
+            }
+
+            input.addEventListener('blur', saveChange);
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    saveChange();
+                }
+                if (e.key === 'Escape') {
+                    isProcessing = true;
+                    updateTable();
+                }
+            });
+        }
+
+        function editStatus(event, opportunityId) {
+            event.stopPropagation();
+            const cell = event.target.closest('td');
+            const opp = opportunities.find(o => o.id === opportunityId);
+            if (!opp) return;
+
+            const currentValue = opp.status;
+            const options = ['Pipeline', 'Won', 'Lost'];
+
+            // Get position for dropdown
+            const rect = cell.getBoundingClientRect();
+            const dropdown = document.createElement('div');
+            dropdown.className = 'custom-dropdown';
+            dropdown.style.top = (rect.bottom + 5) + 'px';
+            dropdown.style.left = rect.left + 'px';
+
+            options.forEach(option => {
+                const item = document.createElement('div');
+                item.className = 'custom-dropdown-item';
+                item.textContent = option;
+                item.style.fontWeight = option === currentValue ? '600' : '400';
+                item.style.background = option === currentValue ? 'var(--bg-tertiary)' : 'transparent';
+
+                item.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    opp.status = option;
+
+                    // If status is set to "Won", automatically set likelihood to 100%
+                    if (option === 'Won') {
+                        opp.likelihood = 100;
+                    }
+
+                    dropdown.remove();
+                    updateMetrics();
+                    updateCharts();
+                    updateTable();
+                    autoBackupToSheets();
+                });
+
+                dropdown.appendChild(item);
+            });
+
+            document.body.appendChild(dropdown);
+
+            // Close dropdown when clicking outside
+            function closeDropdown(e) {
+                if (!dropdown.contains(e.target) && !cell.contains(e.target)) {
+                    dropdown.remove();
+                    document.removeEventListener('click', closeDropdown);
+                }
+            }
+
+            setTimeout(() => {
+                document.addEventListener('click', closeDropdown);
+            }, 0);
+
+            // Close on Escape
+            const escapeHandler = (e) => {
+                if (e.key === 'Escape') {
+                    dropdown.remove();
+                    document.removeEventListener('keydown', escapeHandler);
+                }
+            };
+            document.addEventListener('keydown', escapeHandler);
+        }
+
+        function editLikelihood(event, opportunityId) {
+            event.stopPropagation();
+            const cell = event.target;
+            const opp = opportunities.find(o => o.id === opportunityId);
+            if (!opp) return;
+
+            const currentValue = opp.likelihood;
+            const input = document.createElement('input');
+            input.type = 'number';
+            input.min = '0';
+            input.max = '100';
+            input.value = currentValue;
+            input.className = 'inline-edit-input';
+
+            cell.textContent = '';
+            cell.appendChild(input);
+            input.focus();
+            input.select();
+
+            let isProcessing = false;
+
+            function saveChange() {
+                if (isProcessing) return;
+                isProcessing = true;
+
+                const newValue = parseInt(input.value);
+                if (isNaN(newValue) || newValue < 0 || newValue > 100) {
+                    updateTable();
+                    return;
+                }
+                opp.likelihood = newValue;
+                updateMetrics();
+                updateCharts();
+                updateTable();
+                autoBackupToSheets();
+            }
+
+            input.addEventListener('blur', saveChange);
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    saveChange();
+                }
+                if (e.key === 'Escape') {
+                    isProcessing = true;
+                    updateTable();
+                }
+            });
         }
 
         function formatCurrency(value) {
