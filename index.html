@@ -721,7 +721,7 @@
                         </select>
                     </div>
                     <div class="form-group">
-                        <label for="date">Date *</label>
+                        <label for="date">Lead Acquired *</label>
                         <input type="date" id="date" required>
                     </div>
                 </div>
@@ -739,7 +739,7 @@
             <div id="eventsList" style="margin-bottom: 24px;"></div>
             <form onsubmit="saveEvent(event)">
                 <div style="border-top: 1px solid var(--border-color); padding-top: 24px; margin-bottom: 24px;">
-                    <div style="font-weight: 600; margin-bottom: 16px;">Add New Event</div>
+                    <div style="font-weight: 600; margin-bottom: 16px;">Add or Edit Event</div>
                 </div>
                 <div class="form-group">
                     <label for="eventName">Event Name *</label>
@@ -1034,12 +1034,11 @@
 
                 html += `
                     <div style="background: var(--bg-tertiary); padding: 12px; border-radius: 6px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
-                        <div>
-                            <div style="font-weight: 600; margin-bottom: 4px;">${escapeHtml(e.name)}</div>
+                        <div style="flex: 1; cursor: pointer;" onclick="editEvent(${e.id})">
+                            <div style="font-weight: 600; margin-bottom: 4px; color: var(--text-primary); transition: color 0.2s;" class="event-title-clickable">${escapeHtml(e.name)}</div>
                             <div style="font-size: 12px; color: var(--text-secondary);">Budget: $${formatNumber(e.budgetCost)} | Actual: $${formatNumber(e.actualCost)}</div>
                             <div style="font-size: 12px; margin-top: 4px;"><span class="${varianceClass}">Variance: ${varianceText}</span></div>
                         </div>
-                        <button type="button" class="edit-btn" onclick="editEvent(${e.id})">Edit</button>
                     </div>
                 `;
             });
