@@ -816,7 +816,7 @@
             apiKey: 'AIzaSyAdQir0IM5ssVTOPtMUApinqRvGzB1hUaM',
             spreadsheetId: '1P9OgSo626WLHuP_UfliZo8z28e-AkpbslVhV4Hmv-7g',
             sheetName: 'New',
-            appsScriptUrl: 'https://script.google.com/macros/s/AKfycbxz_fOiAyuUcr68L9ZXiUQ86hluiaZQQN6Z3VWtHE3Q8X8E2rpvpNUKM8qcNuhSrJcx-w/exec'
+            appsScriptUrl: 'https://script.google.com/macros/s/AKfycbzgTLue1qzSM2Z_wEdWcRRjqN4GueE5Xznv_g9nHdxB_lFOWpxm-xZG4rqvHU5JzkcJ/exec'
         };
 
         let events = [];
@@ -1918,24 +1918,43 @@
                     const row = rows[i];
                     if (!row || !row[eventIdx]) continue; // Skip empty rows
 
-                    // Skip if this looks like a header row
-                    if ((row[eventIdx] || '').toLowerCase().includes('event')) continue;
+                    const eventCell = (row[eventIdx] || '').toString();
 
-                    const eventName = row[eventIdx];
+                    // Skip if this looks like a header row or CSV header
+                    if (eventCell.toLowerCase().includes('event') ||
+                        eventCell.includes(',"lead name"') ||
+                        eventCell.includes(',"Lead Name"')) continue;
+
+                    const eventName = eventCell;
                     const event = events.find(e => e.name === eventName);
 
-                    const dealSizeVal = parseFloat((row[valueIdx] || '0').toString().replace(/[^0-9.-]/g, '')) || 0;
-                    const likelihoodVal = parseInt((row[likelihoodIdx] || '50').toString().replace(/[^0-9]/g, '')) || 50;
+                    // Parse values with better error handling
+                    let dealSizeVal = 0;
+                    try {
+                        dealSizeVal = parseFloat((row[valueIdx] || '0').toString().replace(/[^0-9.-]/g, '')) || 0;
+                    } catch (e) {
+                        dealSizeVal = 0;
+                    }
+
+                    let likelihoodVal = 50;
+                    try {
+                        likelihoodVal = parseInt((row[likelihoodIdx] || '50').toString().replace(/[^0-9]/g, '')) || 50;
+                    } catch (e) {
+                        likelihoodVal = 50;
+                    }
+
+                    // Skip if values don't make sense
+                    if (dealSizeVal === 0 && eventName.length === 0) continue;
 
                     opportunities.push({
                         id: id++,
                         eventId: event ? event.id : 0,
                         event: eventName,
-                        leadName: (row[leadIdx] || '').toString(),
-                        sponsor: (row[sponsorIdx] || '').toString(),
+                        leadName: (row[leadIdx] || '').toString().trim(),
+                        sponsor: (row[sponsorIdx] || '').toString().trim(),
                         dealSize: dealSizeVal,
-                        status: (row[statusIdx] || 'Pipeline').toString(),
-                        date: (row[dateIdx] || new Date().toISOString().split('T')[0]).toString(),
+                        status: (row[statusIdx] || 'Pipeline').toString().trim(),
+                        date: (row[dateIdx] || new Date().toISOString().split('T')[0]).toString().trim(),
                         likelihood: likelihoodVal,
                     });
                 }
@@ -2043,3 +2062,4 @@
     </script>
 </body>
 </html>
+>
