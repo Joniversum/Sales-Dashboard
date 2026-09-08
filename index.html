@@ -1824,7 +1824,8 @@
                 const payload = {
                     opportunities: opportunities,
                     events: events,
-                    timestamp: new Date().toISOString()
+                    timestamp: new Date().toISOString(),
+                    action: 'backup'
                 };
 
                 const response = await fetch(GOOGLE_SHEETS_CONFIG.appsScriptUrl, {
@@ -1880,38 +1881,62 @@
                     return;
                 }
 
-                // Parse headers (first row)
-                const headers = rows[0].map(h => h.toLowerCase().trim());
-                const eventIdx = headers.indexOf('event');
-                const leadIdx = headers.indexOf('lead name');
-                const sponsorIdx = headers.indexOf('sponsor/company');
-                const valueIdx = headers.indexOf('sponsorship value');
-                const statusIdx = headers.indexOf('status');
-                const likelihoodIdx = headers.indexOf('likelihood');
-                const dateIdx = headers.indexOf('date');
+                // Find header row (skip any duplicate headers)
+                let headerRowIdx = 0;
+                let headers = [];
+                let eventIdx = -1, leadIdx = -1, sponsorIdx = -1, valueIdx = -1, statusIdx = -1, likelihoodIdx = -1, dateIdx = -1;
+
+                for (let i = 0; i < rows.length; i++) {
+                    const potentialHeaders = rows[i].map(h => (h || '').toLowerCase().trim());
+                    const eIdx = potentialHeaders.indexOf('event');
+                    const lIdx = potentialHeaders.indexOf('lead name');
+
+                    if (eIdx >= 0 && lIdx >= 0) {
+                        headers = potentialHeaders;
+                        headerRowIdx = i;
+                        eventIdx = eIdx;
+                        leadIdx = lIdx;
+                        sponsorIdx = potentialHeaders.indexOf('sponsor/company');
+                        valueIdx = potentialHeaders.indexOf('sponsorship value');
+                        statusIdx = potentialHeaders.indexOf('status');
+                        likelihoodIdx = potentialHeaders.indexOf('likelihood');
+                        dateIdx = potentialHeaders.indexOf('date');
+                        break;
+                    }
+                }
+
+                if (eventIdx < 0 || leadIdx < 0) {
+                    throw new Error('Could not find required columns in Google Sheets');
+                }
 
                 // Clear existing opportunities
                 opportunities = [];
 
-                // Parse data rows
+                // Parse data rows (skip header rows)
                 let id = 1;
-                for (let i = 1; i < rows.length; i++) {
+                for (let i = headerRowIdx + 1; i < rows.length; i++) {
                     const row = rows[i];
-                    if (!row[eventIdx]) continue; // Skip empty rows
+                    if (!row || !row[eventIdx]) continue; // Skip empty rows
+
+                    // Skip if this looks like a header row
+                    if ((row[eventIdx] || '').toLowerCase().includes('event')) continue;
 
                     const eventName = row[eventIdx];
                     const event = events.find(e => e.name === eventName);
+
+                    const dealSizeVal = parseFloat((row[valueIdx] || '0').toString().replace(/[^0-9.-]/g, '')) || 0;
+                    const likelihoodVal = parseInt((row[likelihoodIdx] || '50').toString().replace(/[^0-9]/g, '')) || 50;
 
                     opportunities.push({
                         id: id++,
                         eventId: event ? event.id : 0,
                         event: eventName,
-                        leadName: row[leadIdx] || '',
-                        sponsor: row[sponsorIdx] || '',
-                        dealSize: parseFloat(row[valueIdx]) || 0,
-                        status: row[statusIdx] || 'Pipeline',
-                        date: row[dateIdx] || new Date().toISOString().split('T')[0],
-                        likelihood: parseInt(row[likelihoodIdx]) || 50,
+                        leadName: (row[leadIdx] || '').toString(),
+                        sponsor: (row[sponsorIdx] || '').toString(),
+                        dealSize: dealSizeVal,
+                        status: (row[statusIdx] || 'Pipeline').toString(),
+                        date: (row[dateIdx] || new Date().toISOString().split('T')[0]).toString(),
+                        likelihood: likelihoodVal,
                     });
                 }
 
@@ -1932,7 +1957,9 @@
                 const payload = {
                     opportunities: opportunities,
                     events: events,
-                    timestamp: new Date().toISOString()
+                    timestamp: new Date().toISOString(),
+                    action: 'backup',
+                    clearFirst: true
                 };
 
                 const response = await fetch(GOOGLE_SHEETS_CONFIG.appsScriptUrl, {
