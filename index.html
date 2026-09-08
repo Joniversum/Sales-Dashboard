@@ -613,6 +613,14 @@
         </header>
 
         <div class="filters">
+            <select id="quarterFilter" onchange="applyFilters()">
+                <option value="">All Quarters</option>
+                <option value="Q3 2026">Q3 2026</option>
+                <option value="Q4 2026">Q4 2026</option>
+                <option value="Q1 2027">Q1 2027</option>
+                <option value="Q2 2027">Q2 2027</option>
+                <option value="Q3 2027">Q3 2027</option>
+            </select>
             <select id="eventFilter" onchange="applyFilters()">
                 <option value="">All Events</option>
             </select>
@@ -1280,7 +1288,7 @@
                     labels: Object.keys(likelihoodBuckets),
                     datasets: [{
                         data: Object.values(likelihoodBuckets),
-                        backgroundColor: ['#ef4444', '#f59e0b', '#eab308', '#10b981'],
+                        backgroundColor: ['#ef4444', '#f97316', '#3b82f6', '#22c55e'],
                         borderColor: 'var(--bg-secondary)',
                         borderWidth: 2,
                     }]
@@ -1361,7 +1369,7 @@
                     labels: Object.keys(likelihoodBuckets),
                     datasets: [{
                         data: Object.values(likelihoodBuckets),
-                        backgroundColor: ['#ef4444', '#f59e0b', '#eab308', '#10b981'],
+                        backgroundColor: ['#ef4444', '#f97316', '#3b82f6', '#22c55e'],
                         borderColor: 'var(--bg-secondary)',
                         borderWidth: 2,
                     }]
@@ -1431,16 +1439,27 @@
             eventSelect.value = currentValue;
         }
 
+        function getQuarterFromDate(dateString) {
+            if (!dateString) return null;
+            const date = new Date(dateString);
+            const year = date.getFullYear();
+            const month = date.getMonth() + 1;
+            const quarter = 'Q' + Math.ceil(month / 3);
+            return quarter + ' ' + year;
+        }
+
         function getFilteredOpportunities() {
+            const quarterFilter = document.getElementById('quarterFilter').value;
             const eventFilter = document.getElementById('eventFilter').value;
             const statusFilter = document.getElementById('statusFilter').value;
             const searchInput = document.getElementById('searchInput').value.toLowerCase();
 
             return opportunities.filter(o => {
+                const quarterMatch = !quarterFilter || getQuarterFromDate(o.date) === quarterFilter;
                 const eventMatch = !eventFilter || o.event === eventFilter;
                 const statusMatch = !statusFilter || o.status === statusFilter;
                 const searchMatch = !searchInput || o.leadName.toLowerCase().includes(searchInput);
-                return eventMatch && statusMatch && searchMatch;
+                return quarterMatch && eventMatch && statusMatch && searchMatch;
             });
         }
 
@@ -1513,7 +1532,18 @@
             const rect = cell.getBoundingClientRect();
             const dropdown = document.createElement('div');
             dropdown.className = 'custom-dropdown';
-            dropdown.style.top = (rect.bottom + 5) + 'px';
+
+            // Estimate dropdown height (3 items * ~35px per item)
+            const estimatedHeight = 105;
+            const spaceBelow = window.innerHeight - rect.bottom;
+
+            // Position above if not enough space below
+            if (spaceBelow < estimatedHeight + 10) {
+                dropdown.style.top = (rect.top - estimatedHeight - 5) + 'px';
+            } else {
+                dropdown.style.top = (rect.bottom + 5) + 'px';
+            }
+
             dropdown.style.left = rect.left + 'px';
 
             options.forEach(option => {
