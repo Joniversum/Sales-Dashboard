@@ -631,7 +631,7 @@
                 <option value="Won">Won</option>
                 <option value="Lost">Lost</option>
             </select>
-            <input type="text" id="searchInput" placeholder="Search by lead name..." onkeyup="applyFilters()">
+            <input type="text" id="searchInput" placeholder="Search by sales lead..." onkeyup="applyFilters()">
         </div>
 
         <div class="metrics-grid">
@@ -703,7 +703,7 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="leadName">Lead Name *</label>
+                    <label for="leadName">Sales Lead *</label>
                     <input type="text" id="leadName" required>
                 </div>
                 <div class="form-group">
@@ -854,10 +854,37 @@
             }
         }
 
+        // Remove events that are in the past
+        function removePastEvents() {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0); // Set to start of day for accurate comparison
+
+            const pastEventIds = events
+                .filter(e => {
+                    const eventDate = new Date(e.date || '1900-01-01');
+                    return eventDate < today;
+                })
+                .map(e => e.id);
+
+            if (pastEventIds.length > 0) {
+                // Remove past events
+                events = events.filter(e => !pastEventIds.includes(e.id));
+
+                // Remove opportunities associated with past events
+                opportunities = opportunities.filter(o => !pastEventIds.includes(o.eventId));
+
+                // Save the cleaned data
+                saveToLocalStorage();
+            }
+        }
+
         // Initialize with sample data
         function initializeData() {
             // Try to load from localStorage first
             const hasLocalData = loadFromLocalStorage();
+
+            // Remove any past events
+            removePastEvents();
 
             // If no local data, use sample data
             if (!hasLocalData) {
@@ -1161,6 +1188,7 @@
                     <div style="background: var(--bg-tertiary); padding: 12px; border-radius: 6px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
                         <div style="flex: 1; cursor: pointer;" onclick="editEvent(${e.id})">
                             <div style="font-weight: 600; margin-bottom: 4px; color: var(--text-primary); transition: color 0.2s;" class="event-title-clickable">${escapeHtml(e.name)}</div>
+                            <div style="font-size: 12px; color: var(--text-secondary);">Date: ${e.date ? new Date(e.date).toLocaleDateString() : 'No date'}</div>
                             <div style="font-size: 12px; color: var(--text-secondary);">Budget: $${formatNumber(e.budgetCost)} | Actual: $${formatNumber(e.actualCost)}</div>
                             <div style="font-size: 12px; margin-top: 4px;"><span class="${varianceClass}">Variance: ${varianceText}</span></div>
                         </div>
@@ -1514,7 +1542,8 @@
                 <thead>
                     <tr>
                         <th>Event</th>
-                        <th>Lead Name</th>
+                        <th>Date</th>
+                        <th>Sales Lead</th>
                         <th>Sponsor</th>
                         <th>Deal Size</th>
                         <th>Status</th>
@@ -1527,6 +1556,7 @@
                 const statusClass = `status-${o.status.toLowerCase()}`;
                 html += `<tr>
                     <td>${escapeHtml(o.event)}</td>
+                    <td>${o.date ? new Date(o.date).toLocaleDateString() : 'No date'}</td>
                     <td>${escapeHtml(o.leadName)}</td>
                     <td>${escapeHtml(o.sponsor)}</td>
                     <td class="currency editable-cell" onclick="editDealSize(event, ${o.id})" data-value="${o.dealSize}">${formatCurrency(o.dealSize)}</td>
@@ -1791,7 +1821,7 @@
 
             // Export opportunities
             const oppCsv = [
-                ['Event', 'Lead Name', 'Sponsor', 'Sponsorship Value', 'Status', 'Likelihood', 'Date'],
+                ['Event', 'Sales Lead', 'Sponsor', 'Sponsorship Value', 'Status', 'Likelihood', 'Date'],
                 ...opportunities.map(o => [o.event, o.leadName, o.sponsor, o.dealSize, o.status, o.likelihood, o.date])
             ].map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
 
@@ -1923,7 +1953,7 @@
                     // Skip if this looks like a header row or CSV header
                     if (eventCell.toLowerCase().includes('event') ||
                         eventCell.includes(',"lead name"') ||
-                        eventCell.includes(',"Lead Name"')) continue;
+                        eventCell.includes(',"Sales Lead"')) continue;
 
                     const eventName = eventCell;
                     const event = events.find(e => e.name === eventName);
