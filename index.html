@@ -1223,10 +1223,18 @@
                 // Update existing
                 const event = events.find(ev => ev.id === parseInt(eventId));
                 if (event) {
+                    const oldName = event.name;
                     event.name = name;
                     event.budgetCost = budgetCost;
                     event.actualCost = actualCost;
                     event.date = date;
+
+                    // Update all opportunities that reference this event
+                    opportunities.forEach(opp => {
+                        if (opp.event === oldName) {
+                            opp.event = name;
+                        }
+                    });
                 }
                 document.getElementById('eventName').dataset.eventId = '';
             } else {
