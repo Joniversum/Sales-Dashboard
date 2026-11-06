@@ -594,6 +594,7 @@
         <header>
             <div class="header-left">
                 <h1>Sales Performance Tracker</h1>
+                <p style="margin: 4px 0 0 0; font-size: 14px; color: var(--text-secondary);">Tracking sponsorship against Forums, Salons and Round Table events with multiple sponsors. Figures in Canadian dollars</p>
             </div>
             <div class="header-actions">
                 <button class="btn-secondary" onclick="openEventModal()">⚙️ Manage Events</button>
@@ -712,7 +713,7 @@
                 </div>
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="dealSize">Sponsorship Value ($) *</label>
+                        <label for="dealSize">Sponsorship Value (CAD $) *</label>
                         <input type="number" id="dealSize" step="0.01" required>
                     </div>
                     <div class="form-group">
@@ -756,11 +757,11 @@
                 </div>
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="budgetCost">Budgeted Cost ($) *</label>
+                        <label for="budgetCost">Budgeted Cost (CAD $) *</label>
                         <input type="number" id="budgetCost" step="0.01" required>
                     </div>
                     <div class="form-group">
-                        <label for="actualCost">Actual Cost ($)</label>
+                        <label for="actualCost">Actual Cost (CAD $)</label>
                         <input type="number" id="actualCost" step="0.01" value="0">
                     </div>
                 </div>
@@ -1850,7 +1851,7 @@
         }
 
         function formatCurrency(value) {
-            return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(value);
+            return new Intl.NumberFormat('en-CA', { style: 'currency', currency: 'CAD', maximumFractionDigits: 0 }).format(value);
         }
 
         function formatNumber(value) {
