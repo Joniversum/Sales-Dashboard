@@ -1563,7 +1563,7 @@
             filtered.forEach(o => {
                 const statusClass = `status-${o.status.toLowerCase()}`;
                 html += `<tr>
-                    <td>${escapeHtml(o.event)}</td>
+                    <td class="editable-cell" onclick="editEventName(event, ${o.id})">${escapeHtml(o.event)}</td>
                     <td>${o.date ? new Date(o.date).toLocaleDateString() : 'No date'}</td>
                     <td>${escapeHtml(o.leadName)}</td>
                     <td>${escapeHtml(o.sponsor)}</td>
@@ -1622,6 +1622,52 @@
             updateMetrics();
             updateCharts();
             updateTable();
+        }
+
+        function editEventName(event, opportunityId) {
+            event.stopPropagation();
+            const cell = event.target;
+            const opp = opportunities.find(o => o.id === opportunityId);
+            if (!opp) return;
+
+            const currentValue = opp.event;
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.value = currentValue;
+            input.className = 'inline-edit-input';
+
+            cell.textContent = '';
+            cell.appendChild(input);
+            input.focus();
+            input.select();
+
+            let isProcessing = false;
+
+            function saveChange() {
+                if (isProcessing) return;
+                isProcessing = true;
+
+                const newValue = input.value.trim();
+                if (!newValue) {
+                    updateTable();
+                    return;
+                }
+                opp.event = newValue;
+                saveToLocalStorage();
+                updateMetrics();
+                updateCharts();
+                updateTable();
+                autoBackupToSheets();
+            }
+
+            input.addEventListener('blur', saveChange);
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    saveChange();
+                } else if (e.key === 'Escape') {
+                    updateTable();
+                }
+            });
         }
 
         function editDealSize(event, opportunityId) {
