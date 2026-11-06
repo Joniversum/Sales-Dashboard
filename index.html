@@ -844,9 +844,19 @@
 
                 if (savedEvents) {
                     events = JSON.parse(savedEvents);
+                    // Ensure numeric fields are properly converted
+                    events.forEach(e => {
+                        e.budgetCost = parseFloat(e.budgetCost) || 0;
+                        e.actualCost = parseFloat(e.actualCost) || 0;
+                    });
                 }
                 if (savedOpportunities) {
                     opportunities = JSON.parse(savedOpportunities);
+                    // Ensure numeric fields are properly converted
+                    opportunities.forEach(o => {
+                        o.dealSize = parseFloat(o.dealSize) || 0;
+                        o.likelihood = parseFloat(o.likelihood) || 0;
+                    });
                 }
                 return savedEvents || savedOpportunities; // Return true if any data was loaded
             } catch (e) {
