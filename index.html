@@ -606,9 +606,9 @@
                     <div class="dropdown-content" id="dropdownContent">
                         <button onclick="openAdminModal(); closeDropdown()" style="border-bottom: 1px solid var(--border-color);">🔧 Admin - Delete Events</button>
                         <button onclick="openAdminSponsorshipModal(); closeDropdown()" style="border-bottom: 1px solid var(--border-color);">🔧 Admin - Delete Sponsorships</button>
-                        <button onclick="pullFromSheets(); closeDropdown()">📂 Restore from Google Sheets Backup</button>
-                        <button onclick="pushToSheets(); closeDropdown()" style="border-bottom: 1px solid var(--border-color);">💾 Save Backup to Google Sheets</button>
+                        <button onclick="document.getElementById('csvImportInput').click(); closeDropdown()" style="border-bottom: 1px solid var(--border-color);">📤 Import from CSV</button>
                         <button onclick="exportData(); closeDropdown()">📥 Export to CSV</button>
+                        <input type="file" id="csvImportInput" accept=".csv" style="display:none;" onchange="importFromCSV(event)">
                         <div style="padding: 8px 16px; border-top: 1px solid var(--border-color); font-size: 11px; color: var(--text-secondary);">
                             <div id="syncStatus" style="color: var(--emerald-600);">✓ Auto-backing up</div>
                         </div>
@@ -1956,6 +1956,78 @@
             a.href = url;
             a.download = 'sales-tracker-' + new Date().toISOString().split('T')[0] + '.csv';
             a.click();
+        }
+
+        // Import data from CSV
+        function importFromCSV(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const csv = e.target.result;
+                    const lines = csv.split('\n');
+
+                    // Find OPPORTUNITIES section
+                    let oppStartIndex = lines.findIndex(line => line.includes('OPPORTUNITIES'));
+                    if (oppStartIndex === -1) {
+                        alert('Invalid CSV format. Could not find OPPORTUNITIES section.');
+                        return;
+                    }
+
+                    // Skip header line
+                    oppStartIndex += 1;
+
+                    // Parse opportunities
+                    const newOpportunities = [];
+                    let nextId = Math.max(...opportunities.map(o => o.id || 0), 0) + 1;
+
+                    for (let i = oppStartIndex; i < lines.length; i++) {
+                        const line = lines[i].trim();
+                        if (!line) continue;
+
+                        // Parse CSV line
+                        const values = line.split(',').map(v => v.replace(/^"|"$/g, '').trim());
+
+                        if (values.length >= 7) {
+                            newOpportunities.push({
+                                id: nextId++,
+                                event: values[0],
+                                leadName: values[1],
+                                sponsor: values[2],
+                                dealSize: parseFloat(values[3]) || 0,
+                                status: values[4],
+                                likelihood: parseFloat(values[5]) || 0,
+                                date: values[6],
+                                eventId: 0 // Will be set from event
+                            });
+                        }
+                    }
+
+                    if (newOpportunities.length === 0) {
+                        alert('No opportunities found in CSV.');
+                        return;
+                    }
+
+                    // Add to existing opportunities
+                    opportunities = [...opportunities, ...newOpportunities];
+
+                    // Save to Firebase
+                    saveToLocalStorage();
+                    updateDashboard();
+
+                    alert(`✅ Imported ${newOpportunities.length} opportunities from CSV!`);
+                } catch (error) {
+                    console.error('CSV import error:', error);
+                    alert('Error importing CSV: ' + error.message);
+                }
+            };
+
+            reader.readAsText(file);
+
+            // Reset input
+            event.target.value = '';
         }
 
         // Close modal on outside click
