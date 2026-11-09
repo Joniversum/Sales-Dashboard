@@ -6,6 +6,8 @@
     <title>Sales Performance Tracker</title>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js"></script>
     <style>
         :root {
             --slate-900: #0f172a;
@@ -821,49 +823,104 @@
             appsScriptUrl: 'https://script.google.com/macros/s/AKfycbyJj74LMTw4gW-8VRC7qEhjCHgleskVWXysu1Cwhm-1uWgg_jLRahIVY8z0-EndlVHyEA/exec'
         };
 
+        const FIREBASE_CONFIG = {
+            apiKey: 'AIzaSyAdQir0IM5ssVTOPtMUApinqRvGzB1hUaM',
+            authDomain: 'sales-performance-tracker-db.firebaseapp.com',
+            databaseURL: 'https://sales-performance-tracker-db-default-rtdb.firebaseio.com',
+            projectId: 'sales-performance-tracker-db',
+            storageBucket: 'sales-performance-tracker-db.appspot.com',
+            messagingSenderId: '123456789',
+            appId: '1:123456789:web:abc123'
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(FIREBASE_CONFIG);
+        const db = firebase.database();
+
         let events = [];
         let opportunities = [];
         let revenueChart = null;
         let pipelineChart = null;
         let lastSyncTime = null;
 
-        // Save data to localStorage
+        // Save data to Firebase
         function saveToLocalStorage() {
             try {
-                localStorage.setItem('sales_tracker_events', JSON.stringify(events));
-                localStorage.setItem('sales_tracker_opportunities', JSON.stringify(opportunities));
+                db.ref('sales_data').set({
+                    events: events,
+                    opportunities: opportunities,
+                    lastUpdated: new Date().toISOString()
+                }).catch(error => {
+                    console.warn('Could not save to Firebase:', error);
+                    // Fallback to localStorage
+                    try {
+                        localStorage.setItem('sales_tracker_events', JSON.stringify(events));
+                        localStorage.setItem('sales_tracker_opportunities', JSON.stringify(opportunities));
+                    } catch (e) {
+                        console.warn('Could not save to localStorage:', e);
+                    }
+                });
             } catch (e) {
-                console.warn('Could not save to localStorage:', e);
+                console.warn('Error in save:', e);
             }
         }
 
-        // Load data from localStorage
-        function loadFromLocalStorage() {
-            try {
-                const savedEvents = localStorage.getItem('sales_tracker_events');
-                const savedOpportunities = localStorage.getItem('sales_tracker_opportunities');
+        // Load data from Firebase
+        async function loadFromLocalStorage() {
+            return new Promise((resolve) => {
+                try {
+                    db.ref('sales_data').once('value', (snapshot) => {
+                        const data = snapshot.val();
 
-                if (savedEvents) {
-                    events = JSON.parse(savedEvents);
-                    // Ensure numeric fields are properly converted
-                    events.forEach(e => {
-                        e.budgetCost = parseFloat(e.budgetCost) || 0;
-                        e.actualCost = parseFloat(e.actualCost) || 0;
+                        if (data && data.events && data.opportunities) {
+                            events = data.events;
+                            opportunities = data.opportunities;
+
+                            // Ensure numeric fields are properly converted
+                            events.forEach(e => {
+                                e.budgetCost = parseFloat(e.budgetCost) || 0;
+                                e.actualCost = parseFloat(e.actualCost) || 0;
+                            });
+                            opportunities.forEach(o => {
+                                o.dealSize = parseFloat(o.dealSize) || 0;
+                                o.likelihood = parseFloat(o.likelihood) || 0;
+                            });
+                            resolve(true);
+                        } else {
+                            // Try localStorage as fallback
+                            try {
+                                const savedEvents = localStorage.getItem('sales_tracker_events');
+                                const savedOpportunities = localStorage.getItem('sales_tracker_opportunities');
+
+                                if (savedEvents) {
+                                    events = JSON.parse(savedEvents);
+                                    events.forEach(e => {
+                                        e.budgetCost = parseFloat(e.budgetCost) || 0;
+                                        e.actualCost = parseFloat(e.actualCost) || 0;
+                                    });
+                                }
+                                if (savedOpportunities) {
+                                    opportunities = JSON.parse(savedOpportunities);
+                                    opportunities.forEach(o => {
+                                        o.dealSize = parseFloat(o.dealSize) || 0;
+                                        o.likelihood = parseFloat(o.likelihood) || 0;
+                                    });
+                                }
+                                resolve(savedEvents || savedOpportunities);
+                            } catch (e) {
+                                console.warn('Could not load from localStorage:', e);
+                                resolve(false);
+                            }
+                        }
+                    }).catch(error => {
+                        console.warn('Could not load from Firebase:', error);
+                        resolve(false);
                     });
+                } catch (e) {
+                    console.warn('Error loading data:', e);
+                    resolve(false);
                 }
-                if (savedOpportunities) {
-                    opportunities = JSON.parse(savedOpportunities);
-                    // Ensure numeric fields are properly converted
-                    opportunities.forEach(o => {
-                        o.dealSize = parseFloat(o.dealSize) || 0;
-                        o.likelihood = parseFloat(o.likelihood) || 0;
-                    });
-                }
-                return savedEvents || savedOpportunities; // Return true if any data was loaded
-            } catch (e) {
-                console.warn('Could not load from localStorage:', e);
-                return false;
-            }
+            });
         }
 
         // Remove events that are in the past
@@ -891,9 +948,9 @@
         }
 
         // Initialize with sample data
-        function initializeData() {
-            // Try to load from localStorage first
-            const hasLocalData = loadFromLocalStorage();
+        async function initializeData() {
+            // Try to load from Firebase/localStorage first
+            const hasLocalData = await loadFromLocalStorage();
 
             // Remove any past events
             removePastEvents();
@@ -2172,9 +2229,42 @@
             }
         });
 
+        // Set up real-time listener for Firebase changes (team collaboration)
+        function setupRealtimeSync() {
+            db.ref('sales_data').on('value', (snapshot) => {
+                const data = snapshot.val();
+
+                if (data && data.events && data.opportunities) {
+                    // Check if data has changed
+                    const eventsChanged = JSON.stringify(events) !== JSON.stringify(data.events);
+                    const opportunitiesChanged = JSON.stringify(opportunities) !== JSON.stringify(data.opportunities);
+
+                    if (eventsChanged || opportunitiesChanged) {
+                        events = data.events || [];
+                        opportunities = data.opportunities || [];
+
+                        // Ensure numeric fields are properly converted
+                        events.forEach(e => {
+                            e.budgetCost = parseFloat(e.budgetCost) || 0;
+                            e.actualCost = parseFloat(e.actualCost) || 0;
+                        });
+                        opportunities.forEach(o => {
+                            o.dealSize = parseFloat(o.dealSize) || 0;
+                            o.likelihood = parseFloat(o.likelihood) || 0;
+                        });
+
+                        // Refresh dashboard
+                        updateDashboard();
+                        console.log('Real-time sync: Data updated from Firebase');
+                    }
+                }
+            });
+        }
+
         // Initialize on load
-        window.addEventListener('DOMContentLoaded', () => {
-            initializeData();
+        window.addEventListener('DOMContentLoaded', async () => {
+            await initializeData();
+            setupRealtimeSync(); // Enable real-time collaboration
         });
     </script>
 </body>
