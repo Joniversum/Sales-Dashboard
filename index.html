@@ -1917,34 +1917,38 @@
         // Auto-backup to Google Sheets (called after each save)
         async function autoBackupToSheets() {
             try {
-                const payload = {
-                    opportunities: opportunities,
-                    events: events,
-                    timestamp: new Date().toISOString(),
-                    action: 'backup'
-                };
+                // Prepare data with headers
+                const headers = ['Event', 'Lead Name', 'Sponsor/Company', 'Sponsorship Value', 'Status', 'Likelihood', 'Date'];
+                const rows = opportunities.map(o => [
+                    o.event,
+                    o.leadName,
+                    o.sponsor,
+                    o.dealSize,
+                    o.status,
+                    o.likelihood,
+                    o.date
+                ]);
 
-                const response = await fetch(GOOGLE_SHEETS_CONFIG.appsScriptUrl, {
-                    method: 'POST',
-                    mode: 'cors',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(payload)
-                });
+                // Write headers and data
+                const range = `${GOOGLE_SHEETS_CONFIG.sheetName}!A1:G${rows.length + 1}`;
+                const values = [headers, ...rows];
+
+                const response = await fetch(
+                    `https://sheets.googleapis.com/v4/spreadsheets/${GOOGLE_SHEETS_CONFIG.spreadsheetId}/values/${encodeURIComponent(range)}?key=${GOOGLE_SHEETS_CONFIG.apiKey}`,
+                    {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            values: values
+                        })
+                    }
+                );
 
                 if (response.ok) {
-                    try {
-                        const result = await response.json();
-                        if (result.success) {
-                            lastSyncTime = new Date();
-                            updateSyncStatus(`Backup saved`);
-                        }
-                    } catch (parseError) {
-                        // Response was successful but not valid JSON
-                        lastSyncTime = new Date();
-                        updateSyncStatus(`Backup saved`);
-                    }
+                    lastSyncTime = new Date();
+                    updateSyncStatus(`Auto-backing up`);
                 }
             } catch (error) {
                 // Silently log backup errors - data is safe locally
@@ -2069,40 +2073,47 @@
             try {
                 updateSyncStatus('Saving backup to Google Sheets...', true);
 
-                const payload = {
-                    opportunities: opportunities,
-                    events: events,
-                    timestamp: new Date().toISOString(),
-                    action: 'backup',
-                    clearFirst: true
-                };
-
-                const response = await fetch(GOOGLE_SHEETS_CONFIG.appsScriptUrl, {
-                    method: 'POST',
-                    mode: 'cors',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(payload)
+                // Clear the sheet first
+                const clearUrl = `https://sheets.googleapis.com/v4/spreadsheets/${GOOGLE_SHEETS_CONFIG.spreadsheetId}/values/${GOOGLE_SHEETS_CONFIG.sheetName}!A:Z?key=${GOOGLE_SHEETS_CONFIG.apiKey}`;
+                await fetch(clearUrl, {
+                    method: 'DELETE'
                 });
 
+                // Prepare data with headers
+                const headers = ['Event', 'Lead Name', 'Sponsor/Company', 'Sponsorship Value', 'Status', 'Likelihood', 'Date'];
+                const rows = opportunities.map(o => [
+                    o.event,
+                    o.leadName,
+                    o.sponsor,
+                    o.dealSize,
+                    o.status,
+                    o.likelihood,
+                    o.date
+                ]);
+
+                // Write headers and data
+                const range = `${GOOGLE_SHEETS_CONFIG.sheetName}!A1:G${rows.length + 1}`;
+                const values = [headers, ...rows];
+
+                const response = await fetch(
+                    `https://sheets.googleapis.com/v4/spreadsheets/${GOOGLE_SHEETS_CONFIG.spreadsheetId}/values/${encodeURIComponent(range)}?key=${GOOGLE_SHEETS_CONFIG.apiKey}`,
+                    {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            values: values
+                        })
+                    }
+                );
+
                 if (!response.ok) {
-                    throw new Error(`Apps Script error ${response.status}: ${response.statusText}`);
+                    throw new Error(`Google Sheets API error ${response.status}`);
                 }
 
-                try {
-                    const result = await response.json();
-                    if (result.success) {
-                        updateSyncStatus(`Backup saved (${opportunities.length} opportunities, ${events.length} events)`, false);
-                        lastSyncTime = new Date();
-                    } else {
-                        updateSyncStatus(`Backup error: ${result.error || 'Unknown error'}`, false);
-                    }
-                } catch (parseError) {
-                    // Response was successful but not valid JSON (Apps Script might return plain text)
-                    updateSyncStatus(`Backup saved (${opportunities.length} opportunities, ${events.length} events)`, false);
-                    lastSyncTime = new Date();
-                }
+                updateSyncStatus(`Backup saved (${opportunities.length} opportunities)`, false);
+                lastSyncTime = new Date();
             } catch (error) {
                 console.error('Save backup error:', error);
                 updateSyncStatus(`Error saving backup: ${error.message}`, false);
