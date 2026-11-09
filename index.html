@@ -842,6 +842,7 @@
         let revenueChart = null;
         let pipelineChart = null;
         let lastSyncTime = null;
+        let firebaseInitialized = false;
 
         // Save data to Firebase
         function saveToLocalStorage() {
@@ -991,6 +992,7 @@
             }
 
             updateDashboard();
+            firebaseInitialized = true;
         }
 
         function openAddModal() {
@@ -1962,6 +1964,12 @@
         function importFromCSV(event) {
             const file = event.target.files[0];
             if (!file) return;
+
+            // Wait for Firebase to initialize before processing
+            if (!firebaseInitialized) {
+                alert('Dashboard is still loading. Please wait a moment and try again.');
+                return;
+            }
 
             const reader = new FileReader();
             reader.onload = (e) => {
