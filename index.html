@@ -1981,7 +1981,11 @@
 
                     // Parse opportunities
                     const newOpportunities = [];
-                    let nextId = Math.max(...opportunities.map(o => o.id || 0), 0) + 1;
+                    // Initialize opportunities if not already done
+                    if (!opportunities || opportunities.length === 0) {
+                        opportunities = [];
+                    }
+                    let nextId = Math.max(...(opportunities || []).map(o => o.id || 0), 0) + 1;
 
                     for (let i = oppStartIndex; i < lines.length; i++) {
                         const line = lines[i].trim();
