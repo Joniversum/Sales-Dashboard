@@ -1920,33 +1920,39 @@
                 // Prepare data with headers
                 const headers = ['Event', 'Lead Name', 'Sponsor/Company', 'Sponsorship Value', 'Status', 'Likelihood', 'Date'];
                 const rows = opportunities.map(o => [
-                    o.event,
-                    o.leadName,
-                    o.sponsor,
-                    o.dealSize,
-                    o.status,
-                    o.likelihood,
-                    o.date
+                    o.event || '',
+                    o.leadName || '',
+                    o.sponsor || '',
+                    o.dealSize || '',
+                    o.status || '',
+                    o.likelihood || '',
+                    o.date || ''
                 ]);
 
-                // Write headers and data
-                const range = `${GOOGLE_SHEETS_CONFIG.sheetName}!A1:G${rows.length + 1}`;
-                const values = [headers, ...rows];
+                // Clear the sheet first
+                const range = `${GOOGLE_SHEETS_CONFIG.sheetName}!A:G`;
+                await fetch(
+                    `https://sheets.googleapis.com/v4/spreadsheets/${GOOGLE_SHEETS_CONFIG.spreadsheetId}/values/${encodeURIComponent(range)}:clear?key=${GOOGLE_SHEETS_CONFIG.apiKey}`,
+                    { method: 'POST' }
+                );
 
-                const response = await fetch(
-                    `https://sheets.googleapis.com/v4/spreadsheets/${GOOGLE_SHEETS_CONFIG.spreadsheetId}/values/${encodeURIComponent(range)}?key=${GOOGLE_SHEETS_CONFIG.apiKey}`,
+                // Write headers and data
+                const values = [headers, ...rows];
+                const writeResponse = await fetch(
+                    `https://sheets.googleapis.com/v4/spreadsheets/${GOOGLE_SHEETS_CONFIG.spreadsheetId}/values/${encodeURIComponent(range)}?valueInputOption=RAW&key=${GOOGLE_SHEETS_CONFIG.apiKey}`,
                     {
                         method: 'PUT',
                         headers: {
                             'Content-Type': 'application/json',
                         },
                         body: JSON.stringify({
+                            range: `${GOOGLE_SHEETS_CONFIG.sheetName}!A1`,
                             values: values
                         })
                     }
                 );
 
-                if (response.ok) {
+                if (writeResponse.ok) {
                     lastSyncTime = new Date();
                     updateSyncStatus(`Auto-backing up`);
                 }
@@ -2073,43 +2079,47 @@
             try {
                 updateSyncStatus('Saving backup to Google Sheets...', true);
 
-                // Clear the sheet first
-                const clearUrl = `https://sheets.googleapis.com/v4/spreadsheets/${GOOGLE_SHEETS_CONFIG.spreadsheetId}/values/${GOOGLE_SHEETS_CONFIG.sheetName}!A:Z?key=${GOOGLE_SHEETS_CONFIG.apiKey}`;
-                await fetch(clearUrl, {
-                    method: 'DELETE'
-                });
-
                 // Prepare data with headers
                 const headers = ['Event', 'Lead Name', 'Sponsor/Company', 'Sponsorship Value', 'Status', 'Likelihood', 'Date'];
                 const rows = opportunities.map(o => [
-                    o.event,
-                    o.leadName,
-                    o.sponsor,
-                    o.dealSize,
-                    o.status,
-                    o.likelihood,
-                    o.date
+                    o.event || '',
+                    o.leadName || '',
+                    o.sponsor || '',
+                    o.dealSize || '',
+                    o.status || '',
+                    o.likelihood || '',
+                    o.date || ''
                 ]);
 
-                // Write headers and data
-                const range = `${GOOGLE_SHEETS_CONFIG.sheetName}!A1:G${rows.length + 1}`;
+                // Write headers and data (overwrite starting at A1)
+                const range = `${GOOGLE_SHEETS_CONFIG.sheetName}!A:G`;
                 const values = [headers, ...rows];
 
                 const response = await fetch(
-                    `https://sheets.googleapis.com/v4/spreadsheets/${GOOGLE_SHEETS_CONFIG.spreadsheetId}/values/${encodeURIComponent(range)}?key=${GOOGLE_SHEETS_CONFIG.apiKey}`,
+                    `https://sheets.googleapis.com/v4/spreadsheets/${GOOGLE_SHEETS_CONFIG.spreadsheetId}/values/${encodeURIComponent(range)}:clear?key=${GOOGLE_SHEETS_CONFIG.apiKey}`,
+                    {
+                        method: 'POST'
+                    }
+                );
+
+                // Now write the data
+                const writeResponse = await fetch(
+                    `https://sheets.googleapis.com/v4/spreadsheets/${GOOGLE_SHEETS_CONFIG.spreadsheetId}/values/${encodeURIComponent(range)}?valueInputOption=RAW&key=${GOOGLE_SHEETS_CONFIG.apiKey}`,
                     {
                         method: 'PUT',
                         headers: {
                             'Content-Type': 'application/json',
                         },
                         body: JSON.stringify({
+                            range: `${GOOGLE_SHEETS_CONFIG.sheetName}!A1`,
                             values: values
                         })
                     }
                 );
 
-                if (!response.ok) {
-                    throw new Error(`Google Sheets API error ${response.status}`);
+                if (!writeResponse.ok) {
+                    const errText = await writeResponse.text();
+                    throw new Error(`Google Sheets API error ${writeResponse.status}: ${errText}`);
                 }
 
                 updateSyncStatus(`Backup saved (${opportunities.length} opportunities)`, false);
