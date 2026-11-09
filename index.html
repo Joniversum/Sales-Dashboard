@@ -605,6 +605,7 @@
                         <button onclick="openAdminModal(); closeDropdown()" style="border-bottom: 1px solid var(--border-color);">🔧 Admin - Delete Events</button>
                         <button onclick="openAdminSponsorshipModal(); closeDropdown()" style="border-bottom: 1px solid var(--border-color);">🔧 Admin - Delete Sponsorships</button>
                         <button onclick="pullFromSheets(); closeDropdown()">📂 Restore from Google Sheets Backup</button>
+                        <button onclick="pushToSheets(); closeDropdown()" style="border-bottom: 1px solid var(--border-color);">💾 Save Backup to Google Sheets</button>
                         <button onclick="exportData(); closeDropdown()">📥 Export to CSV</button>
                         <div style="padding: 8px 16px; border-top: 1px solid var(--border-color); font-size: 11px; color: var(--text-secondary);">
                             <div id="syncStatus" style="color: var(--emerald-600);">✓ Auto-backing up</div>
@@ -817,7 +818,7 @@
             apiKey: 'AIzaSyAdQir0IM5ssVTOPtMUApinqRvGzB1hUaM',
             spreadsheetId: '1P9OgSo626WLHuP_UfliZo8z28e-AkpbslVhV4Hmv-7g',
             sheetName: 'New',
-            appsScriptUrl: 'https://script.google.com/macros/s/AKfycbzgTLue1qzSM2Z_wEdWcRRjqN4GueE5Xznv_g9nHdxB_lFOWpxm-xZG4rqvHU5JzkcJ/exec'
+            appsScriptUrl: 'https://script.google.com/macros/s/AKfycbyJj74LMTw4gW-8VRC7qEhjCHgleskVWXysu1Cwhm-1uWgg_jLRahIVY8z0-EndlVHyEA/exec'
         };
 
         let events = [];
